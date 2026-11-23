@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect x=%223%22 y=%223%22 width=%2226%22 height=%2226%22 fill=%22none%22 stroke=%22%23b0894f%22 stroke-width=%223%22/%3E%3C/svg%3E">
+<title>Surreal Shyam · 1st Wing · 360° tour</title>
+<style>
+  :root{--gold:#f0c98a;--ink:#2a2116;--glass:rgba(22,19,16,.62);
+        --st:env(safe-area-inset-top,0px);--sr:env(safe-area-inset-right,0px);--sb:env(safe-area-inset-bottom,0px);--sl:env(safe-area-inset-left,0px);--tap:44px}
+  *{-webkit-tap-highlight-color:transparent;box-sizing:border-box}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;background:#111;
+            font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#fff;touch-action:none;
+            -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  body{position:fixed;inset:0;height:100vh;height:100dvh}
+  canvas{display:block;touch-action:none;cursor:grab;width:100%;height:100%} canvas:active{cursor:grabbing}
+  .hud{position:fixed;left:calc(var(--sl) + 18px);top:calc(var(--st) + 74px);pointer-events:none;text-shadow:0 1px 10px rgba(0,0,0,.5)}
+  .hud .k{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+  .hud .t{font-size:clamp(22px,5.5vw,32px);font-weight:300;margin-top:4px}
+  /* room tabs: one horizontally scrolling row, 44px targets */
+  .tabs{position:fixed;left:calc(var(--sl) + 8px);right:calc(var(--sr) + 8px);top:calc(var(--st) + 10px);pointer-events:none}
+  .tabs-in{pointer-events:auto;display:flex;gap:2px;padding:4px;margin:0 auto;width:max-content;max-width:100%;overflow-x:auto;overflow-y:hidden;
+           border-radius:999px;background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+           touch-action:pan-x;overscroll-behavior:contain;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .tabs-in::-webkit-scrollbar{display:none}
+  .tabs-in a,.tabs-in button{all:unset;cursor:pointer;flex:0 0 auto;scroll-snap-align:center;white-space:nowrap;min-height:var(--tap);min-width:var(--tap);
+        display:inline-flex;align-items:center;justify-content:center;padding:0 16px;border-radius:999px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#ddd;box-sizing:border-box}
+  .tabs-in a.home{padding:0 14px;font-size:18px;letter-spacing:0}
+  .tabs-in button:hover,.tabs-in a:hover{color:#fff} .tabs-in button.on{background:#f4efe6;color:var(--ink);font-weight:600}
+  .bar{position:fixed;left:50%;bottom:calc(var(--sb) + 12px);transform:translateX(-50%);display:flex;align-items:center;gap:4px;padding:5px 8px;border-radius:999px;max-width:calc(100vw - var(--sl) - var(--sr) - 16px);
+       background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-size:12px}
+  .bar button{all:unset;cursor:pointer;width:var(--tap);height:var(--tap);display:grid;place-items:center;border-radius:50%;font-size:17px;color:#eee;flex:0 0 auto}
+  .bar button:hover{background:rgba(255,255,255,.12)} .bar button.act{background:var(--gold);color:var(--ink)}
+  .bar .day{background:var(--gold);color:var(--ink);padding:0 12px;border-radius:999px;font-weight:600;line-height:34px}
+  .bar .sep{width:1px;height:20px;background:rgba(255,255,255,.2);margin:0 2px;flex:0 0 auto}
+  .bar .hint{opacity:.75;padding:0 8px;white-space:nowrap}
+  #gyro[hidden],#fsx[hidden]{display:none}
+  .hs{position:fixed;transform:translate(-50%,-50%);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;user-select:none;padding:7px;touch-action:none}
+  .hs .dot{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.22);border:2px solid #fff;box-shadow:0 0 0 6px rgba(255,255,255,.12);
+           display:grid;place-items:center;transition:transform .2s} .hs .dot::after{content:"";width:9px;height:9px;border-radius:50%;background:#fff}
+  .hs:hover .dot{transform:scale(1.15)}
+  .hs .lab{font-size:11px;letter-spacing:.12em;text-transform:uppercase;background:var(--glass);padding:5px 10px;border-radius:999px;white-space:nowrap}
+  #fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .35s}
+  #load{position:fixed;inset:0;display:grid;place-items:center;color:#ccc;font-size:14px}
+  .q{position:fixed;right:calc(var(--sr) + 14px);bottom:calc(var(--sb) + 76px);font-size:10px;opacity:.6;letter-spacing:.1em;text-transform:uppercase;pointer-events:none}
+  body.single .tabs,body.single .hs,body.single .q{display:none}
+  /* immersive fallback where the Fullscreen API is missing (iPhone Safari) */
+  body.pfs .hud,body.pfs .tabs,body.pfs .q,body.pfs .bar>*:not(#fsx){display:none}
+  body.pfs .bar{background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;left:auto;right:calc(var(--sr) + 12px);transform:none;top:calc(var(--st) + 12px);bottom:auto}
+  body.pfs #fsx{display:grid;background:var(--glass)}
+  @media (max-width:600px){ .bar .hint,.bar .day,.bar .sep.d{display:none} .hs .lab{font-size:10px;padding:4px 8px} .hud{top:calc(var(--st) + 72px)} }
+  /* landscape phones: little height, keep the view clear */
+  @media (max-height:520px){ .hud .k{display:none} .hud{top:calc(var(--st) + 66px)} .hud .t{font-size:20px} .q{display:none}
+     .bar{bottom:calc(var(--sb) + 8px)} .tabs{top:calc(var(--st) + 6px)} }
+  @media (max-height:520px) and (orientation:landscape){ .bar{left:auto;right:calc(var(--sr) + 10px);transform:none} }
+</style>
+</head>
+<body>
+<div id="load">Loading tour…</div>
+<div class="hud"><div class="k" id="kicker">360° · Surreal Shyam · 1st Wing</div><div class="t" id="title">Living</div></div>
+<nav class="tabs" aria-label="Rooms"><div class="tabs-in" id="tabs"><a class="home" id="home" href="../" aria-label="Back to the building">←</a></div></nav>
+<div id="hots"></div>
+<div class="bar">
+  <span class="day">☀ Day</span><span class="sep d"></span>
+  <button id="play" title="Auto-rotate" aria-label="Auto-rotate">❚❚</button>
+  <button id="zout" title="Zoom out" aria-label="Zoom out">−</button><button id="zin" title="Zoom in" aria-label="Zoom in">+</button>
+  <button id="gyro" title="Look around by moving your phone" aria-label="Gyroscope look-around" hidden><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="8" y="3" width="8" height="14" rx="2"/><path d="M4 18c2.5 3 13.5 3 16 0M18 16l2 2-3 1"/></svg></button>
+  <button id="fs" title="Fullscreen" aria-label="Fullscreen">⛶</button><button id="fsx" title="Exit full view" aria-label="Exit full view" hidden>✕</button>
+  <span class="hint" id="hint">Drag to look around</span>
+</div>
+<div class="q" id="q"></div>
+<div id="fade"></div>
+<script type="module">
+import * as THREE from "./three.module.min.js";
+const q = new URLSearchParams(location.search);
+const single = q.get("src");
+{ const from = q.get("from"); const hb = document.getElementById("home"); if (hb && from && /^floor-\d+(\/wing-\d+)?$/.test(from)) hb.setAttribute("href", "../#" + from); }                       // legacy single-pano mode (shot scripts)
+const $ = id => document.getElementById(id);
+const touchy = matchMedia("(pointer:coarse)").matches || navigator.maxTouchPoints > 0;
+if (touchy) $("hint").textContent = "Drag to look · pinch to zoom";
+// ---- image quality: 2912 on desktop, 2048 on small screens / slow links, 1024 preview always first
+const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+const slow = !!conn && (conn.saveData || /(^|-)(2|3)g$/.test(conn.effectiveType || "") || (conn.downlink && conn.downlink < 1.5));
+const smallScreen = Math.min(innerWidth, screen.width || innerWidth) < 900;
+let lon = parseFloat(q.get("lon") ?? "202"), lat = parseFloat(q.get("lat") ?? "-4"), fov = parseFloat(q.get("fov") ?? "78");
+let auto = q.get("auto") !== "0" && !q.has("lon") && !matchMedia("(prefers-reduced-motion:reduce)").matches;
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+const maxTex = renderer.capabilities.maxTextureSize;
+let variant = (q.get("q") === "hd") ? "full" : (q.get("q") === "mobile" || smallScreen || slow || maxTex < 4096) ? "mobile" : "full";
+renderer.outputColorSpace = THREE.SRGBColorSpace; document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(fov, innerWidth / innerHeight, 0.1, 1000);
+const geo = new THREE.SphereGeometry(100, 96, 64); geo.scale(-1, 1, 1);
+const mat = new THREE.MeshBasicMaterial({ color: 0xffffff }); scene.add(new THREE.Mesh(geo, mat));
+const loader = new THREE.TextureLoader();
+function prep(t) { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); t.minFilter = THREE.LinearMipmapLinearFilter; return t; }
+function setTex(t) { const old = mat.map; mat.map = t; mat.needsUpdate = true; if (old && old !== t) old.dispose(); }
+const dirOf = (lo, la) => { const phi = THREE.MathUtils.degToRad(90 - la), th = THREE.MathUtils.degToRad(lo);
+  return new THREE.Vector3(Math.sin(phi) * Math.cos(th), Math.cos(phi), Math.sin(phi) * Math.sin(th)); };
+// ---- size: DPR capped at 2; portrait phones get a taller vertical fov so the horizontal view is not a keyhole
+let W = 0, H = 0;
+function resize() {
+  const vv = window.visualViewport;
+  W = Math.round(Math.max(1, innerWidth)); H = Math.round(Math.max(1, vv && vv.height ? Math.min(innerHeight, vv.height + vv.offsetTop) : innerHeight));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2)); renderer.setSize(W, H);
+  camera.aspect = W / H; camera.updateProjectionMatrix();
+}
+const vfov = () => W / H >= 1 ? fov : Math.min(100, THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(fov) / 2) / (W / H))));
+resize();
+addEventListener("resize", resize);
+addEventListener("orientationchange", () => { resize(); setTimeout(resize, 150); setTimeout(resize, 500); });
+window.visualViewport?.addEventListener("resize", resize);
+
+let tour = null, room = null, token = 0, last = performance.now(), idle = 0;
+const fade = $("fade");
+const qlabel = t => { $("q").textContent = t; };
+async function show(id, first = false) {
+  const r = tour.rooms.find(x => x.id === id) || tour.rooms[0]; const my = ++token;
+  if (!first) { fade.style.opacity = 1; await new Promise(s => setTimeout(s, 300)); }
+  if (window.__pano) window.__pano.hd = false;
+  const pre = prep(await loader.loadAsync(r.preview)); if (my !== token) return;   // 1024 preview first
+  setTex(pre); room = r; lon = r.lon; lat = r.lat; fov = r.fov || 78; idle = 0;
+  $("title").textContent = r.label;
+  document.querySelectorAll("#tabs button").forEach(b => { const on = b.dataset.id === r.id; b.classList.toggle("on", on);
+    if (on) b.scrollIntoView({ block: "nearest", inline: "center", behavior: first ? "auto" : "smooth" }); });
+  buildHotspots(r); history.replaceState(null, "", "?room=" + r.id + (q.get("q") ? "&q=" + q.get("q") : ""));
+  $("load")?.remove(); fade.style.opacity = 0; qlabel("preview");
+  if (window.__pano) { window.__pano.ready = true; window.__pano.hd = false; }
+  const src = variant === "mobile" && r.mobile ? r.mobile : r.full;
+  loader.loadAsync(src).then(t => { if (my === token) { setTex(prep(t)); qlabel(variant === "mobile" ? "2K" : "HD"); if (window.__pano) window.__pano.hd = true; } })
+    .catch(() => qlabel("preview"));
+}
+const hots = $("hots"); let hsEls = [];
+function buildHotspots(r) {
+  hots.innerHTML = ""; hsEls = (r.hotspots || []).map(h => {
+    const d = document.createElement("div"); d.className = "hs"; d.setAttribute("role", "button"); d.setAttribute("aria-label", "Go to " + h.label);
+    d.innerHTML = `<div class="dot"></div><div class="lab">${h.label}</div>`;
+    d.addEventListener("pointerdown", e => e.stopPropagation());
+    d.addEventListener("click", () => show(h.to)); hots.appendChild(d); return { el: d, v: dirOf(h.lon, h.lat) }; });
+}
+if (single) {
+  document.body.classList.add("single");
+  setTex(prep(await loader.loadAsync(single))); $("load").remove();
+  $("title").textContent = q.get("title") || "Living · Dining · Kitchen";
+} else {
+  tour = await (await fetch("tour.json")).json();
+  const tabs = $("tabs");
+  for (const r of tour.rooms) { const b = document.createElement("button"); b.textContent = r.label.split(" · ")[0]; b.dataset.id = r.id; b.onclick = () => show(r.id); tabs.appendChild(b); }
+  await show(q.get("room") || "living", true);
+  if (q.has("lon")) { lon = parseFloat(q.get("lon")); lat = parseFloat(q.get("lat") ?? "0"); fov = parseFloat(q.get("fov") ?? "78"); }
+}
+// ---- controls: pointer events (mouse + touch), two-finger pinch zoom, wheel
+const el = renderer.domElement;
+const ptrs = new Map(); let drag = null, pinch = null, gyroOn = false, gyroOff = 0;
+const clampFov = f => Math.max(30, Math.min(105, f));
+const pdist = () => { const [a, b] = [...ptrs.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
+const rebase = () => { const p = [...ptrs.values()][0]; drag = p ? { x: p.x, y: p.y, lon, lat } : null; };
+el.addEventListener("pointerdown", e => { ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); try { el.setPointerCapture(e.pointerId); } catch {} idle = 0;
+  if (ptrs.size === 2) { drag = null; pinch = { d: pdist(), fov }; } else if (ptrs.size === 1) rebase(); });
+el.addEventListener("pointermove", e => { const p = ptrs.get(e.pointerId); if (!p) return; p.x = e.clientX; p.y = e.clientY; idle = 0;
+  if (ptrs.size >= 2 && pinch) { fov = clampFov(pinch.fov * pinch.d / Math.max(1, pdist())); return; }
+  if (!drag) return; const k = vfov() / H;
+  if (gyroOn) { gyroOff = (gyroOff - (e.clientX - drag.x) * k); drag.x = e.clientX; }
+  else { lon = drag.lon - (e.clientX - drag.x) * k; lat = Math.max(-85, Math.min(85, drag.lat + (e.clientY - drag.y) * k)); } });
+const up = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (ptrs.size === 1) rebase(); else if (!ptrs.size) drag = null; idle = 0; };
+el.addEventListener("pointerup", up); el.addEventListener("pointercancel", up); el.addEventListener("lostpointercapture", up);
+const zoom = d => { fov = clampFov(fov + d); idle = 0; };
+el.addEventListener("wheel", e => { zoom(e.deltaY * 0.04); e.preventDefault(); }, { passive: false });
+for (const ev of ["gesturestart", "gesturechange", "gestureend"]) document.addEventListener(ev, e => e.preventDefault());   // iOS page pinch-zoom
+el.addEventListener("touchmove", e => e.preventDefault(), { passive: false });                                          // no scroll / rubber-band
+el.addEventListener("contextmenu", e => e.preventDefault());
+$("zin").onclick = () => zoom(-8); $("zout").onclick = () => zoom(8);
+const play = $("play");
+const syncPlay = () => play.textContent = auto ? "❚❚" : "▶"; syncPlay();
+play.onclick = () => { auto = !auto; idle = 99; syncPlay(); };
+// ---- fullscreen, with an immersive-CSS fallback where the API is missing (iPhone Safari)
+const root = document.documentElement;
+const fsReq = root.requestFullscreen || root.webkitRequestFullscreen, fsExit = document.exitFullscreen || document.webkitExitFullscreen;
+const inFs = () => document.fullscreenElement || document.webkitFullscreenElement;
+function toggleFs() {
+  if (fsReq) { inFs() ? fsExit.call(document) : Promise.resolve(fsReq.call(root)).catch(() => document.body.classList.toggle("pfs")); }
+  else document.body.classList.toggle("pfs");
+  setTimeout(resize, 200);
+}
+$("fs").onclick = toggleFs; $("fsx").onclick = () => { document.body.classList.remove("pfs"); if (inFs()) fsExit.call(document); $("fsx").hidden = true; setTimeout(resize, 200); };
+new MutationObserver(() => { $("fsx").hidden = !document.body.classList.contains("pfs"); }).observe(document.body, { attributes: true, attributeFilter: ["class"] });
+addEventListener("keydown", e => { if (e.key === "f") toggleFs(); if (e.key === " ") play.click(); });
+// ---- gyroscope look-around (iOS needs a tap for the permission prompt)
+const gb = $("gyro"), DOE = window.DeviceOrientationEvent;
+if (touchy && DOE) gb.hidden = false;
+const _q = new THREE.Quaternion(), _q1 = new THREE.Quaternion(-Math.SQRT1_2, 0, 0, Math.SQRT1_2), _q0 = new THREE.Quaternion(), _e = new THREE.Euler(), _f = new THREE.Vector3(), _z = new THREE.Vector3(0, 0, 1);
+let gyroFirst = true, gLon = 0, gLat = 0;
+function onOri(e) {
+  if (e.alpha == null) return; const d = THREE.MathUtils.degToRad;
+  const orient = d(screen.orientation?.angle ?? window.orientation ?? 0);
+  _e.set(d(e.beta), d(e.alpha), -d(e.gamma), "YXZ"); _q.setFromEuler(_e).multiply(_q1).multiply(_q0.setFromAxisAngle(_z, -orient));
+  _f.set(0, 0, -1).applyQuaternion(_q);
+  gLon = THREE.MathUtils.radToDeg(Math.atan2(_f.z, _f.x)); gLat = THREE.MathUtils.radToDeg(Math.asin(Math.max(-1, Math.min(1, _f.y))));
+  if (gyroFirst) { gyroOff = lon - gLon; gyroFirst = false; }
+  lon = gLon + gyroOff; lat = gLat; idle = 0;
+}
+async function setGyro(on) {
+  if (on) {
+    if (typeof DOE.requestPermission === "function") { try { if ((await DOE.requestPermission()) !== "granted") return; } catch { return; } }
+    gyroFirst = true; gyroOn = true; auto = false; syncPlay(); addEventListener("deviceorientation", onOri); $("hint").textContent = "Move your phone to look around";
+  } else { gyroOn = false; removeEventListener("deviceorientation", onOri); $("hint").textContent = touchy ? "Drag to look · pinch to zoom" : "Drag to look around"; }
+  gb.classList.toggle("act", gyroOn);
+}
+gb.onclick = () => setGyro(!gyroOn);
+// ---- render loop
+const v = new THREE.Vector3();
+function frame(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now; idle += dt;
+  if (auto && !drag && !pinch && idle > 3) lon += dt * 2.5;
+  camera.fov = vfov(); camera.updateProjectionMatrix();
+  camera.lookAt(dirOf(lon, lat)); renderer.render(scene, camera);
+  for (const h of hsEls) { v.copy(h.v).multiplyScalar(50).project(camera);
+    const vis = v.z < 1 && Math.abs(v.x) < 1.1 && Math.abs(v.y) < 1.1;
+    h.el.style.display = vis ? "flex" : "none";
+    if (vis) { h.el.style.left = ((v.x + 1) / 2 * W) + "px"; h.el.style.top = ((1 - v.y) / 2 * H) + "px"; } }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+window.__pano = { ready: !!mat.map, hd: false, show: id => show(id), set: (a, b, f) => { lon = a; lat = b; if (f) fov = f; }, get room() { return room?.id; }, get view() { return {lon, lat, fov}; }, get variant() { return variant; }, get size() { return {W, H, dpr: renderer.getPixelRatio()}; } };
+</script>
+</body>
+</html>
