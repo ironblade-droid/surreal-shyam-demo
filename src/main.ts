@@ -14,7 +14,7 @@ const F = PROJECT.floors;
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, mobile ? 1.75 : 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.92;
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 const scene = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
@@ -30,7 +30,7 @@ const sky = new THREE.Mesh(new THREE.SphereGeometry(900, 32, 16), new THREE.Shad
 scene.add(sky);
 scene.fog = new THREE.Fog(0xcfd3d6, 180, 620);
 scene.add(new THREE.HemisphereLight(0xdfe6f5, 0x8a7a66, 1.25));
-const sun = new THREE.DirectionalLight(0xffdcb0, 2.3);
+const sun = new THREE.DirectionalLight(0xffdcb0, 2.0);
 sun.position.set(-55, 62, 70); sun.castShadow = true;
 sun.shadow.mapSize.set(mobile ? 1024 : 2048, mobile ? 1024 : 2048);
 Object.assign(sun.shadow.camera, { left: -45, right: 45, top: 45, bottom: -45, near: 10, far: 220 }); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.04;
@@ -39,7 +39,7 @@ const built = buildScene(scene, { mobile });
 
 const camera = new THREE.PerspectiveCamera(38, 1, 0.5, 2000);
 const dist0 = mobile ? 120 : 80;
-camera.position.set(0.58 * dist0, mobile ? 28 : 24, 0.81 * dist0);
+camera.position.set(-0.58 * dist0, mobile ? 28 : 24, 0.81 * dist0);
 const controls = new OrbitControls(camera, canvas);
 controls.target.set(0, 15, 0); controls.enableDamping = true; controls.dampingFactor = 0.08; controls.enablePan = false;
 controls.minDistance = 24; controls.maxDistance = 150; controls.maxPolarAngle = 1.48; controls.minPolarAngle = 0.25;
@@ -350,6 +350,7 @@ function projectWing(f: number, w: number) {
   pickAt: (x: number, y: number) => pick(x, y),
   info: (x: number, y: number) => { pick(x, y); const hs = ray.intersectObjects(built.picks, false).slice(0, 3).map(h => ({ f: h.object.userData.floor, w: h.object.userData.wing, y: +h.point.y.toFixed(2), d: +h.distance.toFixed(2) })); return { hs, cam: camera.position.toArray(), tgt: controls.target.toArray(), fy: [3, 4].map(f => floorY(f)) }; },
   settled: () => !focusing && Math.abs(offX - wantX) < 1 && Math.abs(offY - wantY) < 1 && Math.abs(controls.target.y - focusY) < 0.15,
+  look: (p: number[], tg: number[]) => { focusing = false; controls.minDistance = 5; controls.target.set(tg[0], tg[1], tg[2]); camera.position.set(p[0], p[1], p[2]); controls.update(); lastInteract = performance.now(); invalidate(); },
   view: (az: number) => {
     const vis = visibleInset();
     const d = vis.vh / H < 0.65 || camera.aspect < 0.85 ? 125 : 85;
