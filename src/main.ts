@@ -30,7 +30,7 @@ let modelReady = false;
 built.ready.then(() => { modelReady = true; syncTargets(); invalidate(); }).catch(e => { console.error("model load failed", e); });
 
 const camera = new THREE.PerspectiveCamera(38, 1, 0.5, 2000);
-const dist0 = mobile ? 130 : 68;
+const dist0 = mobile ? (innerHeight > innerWidth ? 150 : 95) : 68;
 camera.position.set(-0.58 * dist0, mobile ? 10 : 6, 0.81 * dist0);
 const controls = new OrbitControls(camera, canvas);
 controls.target.set(0, 15, 0); controls.enableDamping = true; controls.dampingFactor = 0.08; controls.enablePan = false;
@@ -240,8 +240,8 @@ function syncTargets() {
 // camera focus on the chosen floor (target only; the user's orbit angle is kept)
 let focusY = 15, focusing = false;
 function focusFloor() {
-  focusY = state.floor == null ? (mobile ? 16 : 15) : floorY(state.floor) + FLOOR_H / 2;
-  const wantD = state.floor == null ? (mobile ? 130 : 68) : (mobile ? 105 : 75);
+  focusY = state.floor == null ? (mobile ? 14 : 15) : floorY(state.floor) + FLOOR_H / 2;
+  const wantD = state.floor == null ? (mobile ? (innerHeight > innerWidth ? 150 : 95) : 68) : (mobile ? 105 : 75);
   const az = Math.atan2(camera.position.x - controls.target.x, camera.position.z - controls.target.z);
   const elev = state.floor == null ? (mobile ? 8 : 4) : (mobile ? 20 : 14);
   controls.target.set(0, focusY, 0);
