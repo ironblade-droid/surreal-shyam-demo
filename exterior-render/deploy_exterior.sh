@@ -7,7 +7,7 @@ python3 $EXT/scripts/make_viewer.py
 cd /workspace/ss-pages
 git fetch -q origin gh-pages && git checkout -q gh-pages && git rebase -q origin/gh-pages
 rm -rf exterior && cp -r $EXT/viewer exterior
-git add -A exterior && git commit -q -m "Exterior: photoreal orbit viewer (12 angles, dusk/day, tappable flats from ID passes)" || echo "gh-pages: nothing to commit"
+git add -A exterior && git commit -q -m "Exterior viewer: favicon link" || echo "gh-pages: nothing to commit"
 for i in 1 2 3; do git push -q origin gh-pages && break || { git fetch -q origin gh-pages; git rebase -q origin/gh-pages; }; done
 git log --oneline -1
 # ---- main (separate worktree so the other worker's uncommitted edits in site/ are untouched)
@@ -24,6 +24,6 @@ cat > exterior-render/README.md <<'MD'
 - Render the .blend in place: it stores asset paths relative to itself.
 MD
 git add -A public/exterior exterior-render
-git commit -q -m "Photoreal exterior orbit viewer + Blender render scripts" || echo "main: nothing to commit"
+git commit -q -m "Exterior viewer: favicon link" || echo "main: nothing to commit"
 for i in 1 2 3; do git push -q origin HEAD:main && break || { git fetch -q origin main; git rebase -q origin/main; }; done
 git log --oneline -1
