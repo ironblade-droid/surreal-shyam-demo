@@ -1,0 +1,152 @@
+{
+ "background": "transparent (alpha 0)",
+ "match": "nearest colour; values may differ by +-1 from rounding",
+ "colors": {
+  "#325580": {
+   "floor": 1,
+   "wing": 1,
+   "unit": "101"
+  },
+  "#3282d2": {
+   "floor": 1,
+   "wing": 2,
+   "unit": "102"
+  },
+  "#32af80": {
+   "floor": 1,
+   "wing": 3,
+   "unit": "103"
+  },
+  "#32dcd2": {
+   "floor": 1,
+   "wing": 4,
+   "unit": "104"
+  },
+  "#505580": {
+   "floor": 2,
+   "wing": 1,
+   "unit": "201"
+  },
+  "#5082d2": {
+   "floor": 2,
+   "wing": 2,
+   "unit": "202"
+  },
+  "#50af80": {
+   "floor": 2,
+   "wing": 3,
+   "unit": "203"
+  },
+  "#50dcd2": {
+   "floor": 2,
+   "wing": 4,
+   "unit": "204"
+  },
+  "#6e5580": {
+   "floor": 3,
+   "wing": 1,
+   "unit": "301"
+  },
+  "#6e82d2": {
+   "floor": 3,
+   "wing": 2,
+   "unit": "302"
+  },
+  "#6eaf80": {
+   "floor": 3,
+   "wing": 3,
+   "unit": "303"
+  },
+  "#6edcd2": {
+   "floor": 3,
+   "wing": 4,
+   "unit": "304"
+  },
+  "#8c5580": {
+   "floor": 4,
+   "wing": 1,
+   "unit": "401"
+  },
+  "#8c82d2": {
+   "floor": 4,
+   "wing": 2,
+   "unit": "402"
+  },
+  "#8caf80": {
+   "floor": 4,
+   "wing": 3,
+   "unit": "403"
+  },
+  "#8cdcd2": {
+   "floor": 4,
+   "wing": 4,
+   "unit": "404"
+  },
+  "#aa5580": {
+   "floor": 5,
+   "wing": 1,
+   "unit": "501"
+  },
+  "#aa82d2": {
+   "floor": 5,
+   "wing": 2,
+   "unit": "502"
+  },
+  "#aaaf80": {
+   "floor": 5,
+   "wing": 3,
+   "unit": "503"
+  },
+  "#aadcd2": {
+   "floor": 5,
+   "wing": 4,
+   "unit": "504"
+  },
+  "#c85580": {
+   "floor": 6,
+   "wing": 1,
+   "unit": "601"
+  },
+  "#c882d2": {
+   "floor": 6,
+   "wing": 2,
+   "unit": "602"
+  },
+  "#c8af80": {
+   "floor": 6,
+   "wing": 3,
+   "unit": "603"
+  },
+  "#c8dcd2": {
+   "floor": 6,
+   "wing": 4,
+   "unit": "604"
+  },
+  "#e65580": {
+   "floor": 7,
+   "wing": 1,
+   "unit": "701"
+  },
+  "#e682d2": {
+   "floor": 7,
+   "wing": 2,
+   "unit": "702"
+  },
+  "#e6af80": {
+   "floor": 7,
+   "wing": 3,
+   "unit": "703"
+  },
+  "#e6dcd2": {
+   "floor": 7,
+   "wing": 4,
+   "unit": "704"
+  },
+  "#ffdc28": {
+   "floor": 0,
+   "wing": null,
+   "unit": null,
+   "label": "Ground floor (retail + lobby)"
+  }
+ }
+}
