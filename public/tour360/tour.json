@@ -1,230 +1,231 @@
 {
- "title": "Surreal Shyam \u00b7 1st Wing",
- "rooms": [
-  {
-   "id": "living",
-   "label": "Living",
-   "lon": 97.9,
-   "lat": -5.2,
-   "fov": 80,
-   "preview": "rooms/living-1024x512.webp",
-   "mobile": "rooms/living-2048x1024.webp",
-   "full": "rooms/living-2912x1456.webp",
-   "hotspots": [
+  "title": "Surreal Shyam \u00b7 1st Wing",
+  "rooms": [
     {
-     "to": "kitchen",
-     "lon": 203.2,
-     "lat": -8.3,
-     "label": "Kitchen \u00b7 Dining"
+      "id": "living",
+      "label": "Living",
+      "lon": 97.9,
+      "lat": -5.2,
+      "fov": 80,
+      "preview": "rooms/living-1024x512.webp",
+      "mobile": "rooms/living-2048x1024.webp",
+      "full": "rooms/living-4096x2048.webp",
+      "hotspots": [
+        {
+          "to": "kitchen",
+          "lon": 203.2,
+          "lat": -8.3,
+          "label": "Kitchen \u00b7 Dining"
+        },
+        {
+          "to": "balcony",
+          "lon": 97.9,
+          "lat": -7.0,
+          "label": "Balcony"
+        },
+        {
+          "to": "bedroom1",
+          "lon": 342.5,
+          "lat": -10.5,
+          "label": "Bedroom 1"
+        }
+      ],
+      "short": "Living",
+      "mid": "rooms/living-3072x1536.webp"
     },
     {
-     "to": "balcony",
-     "lon": 97.9,
-     "lat": -7.0,
-     "label": "Balcony"
+      "id": "kitchen",
+      "label": "Kitchen \u00b7 Dining",
+      "lon": 79.1,
+      "lat": -7.8,
+      "fov": 80,
+      "preview": "rooms/kitchen-1024x512.webp",
+      "mobile": "rooms/kitchen-2048x1024.webp",
+      "full": "rooms/kitchen-2912x1456.webp",
+      "hotspots": [
+        {
+          "to": "living",
+          "lon": 312.7,
+          "lat": -6.6,
+          "label": "Living"
+        },
+        {
+          "to": "bedroom2",
+          "lon": 212.4,
+          "lat": -5.1,
+          "label": "Bedroom 2"
+        }
+      ],
+      "short": "Kitchen"
     },
     {
-     "to": "bedroom1",
-     "lon": 342.5,
-     "lat": -10.5,
-     "label": "Bedroom 1"
-    }
-   ],
-   "short": "Living"
-  },
-  {
-   "id": "kitchen",
-   "label": "Kitchen \u00b7 Dining",
-   "lon": 79.1,
-   "lat": -7.8,
-   "fov": 80,
-   "preview": "rooms/kitchen-1024x512.webp",
-   "mobile": "rooms/kitchen-2048x1024.webp",
-   "full": "rooms/kitchen-2912x1456.webp",
-   "hotspots": [
-    {
-     "to": "living",
-     "lon": 312.7,
-     "lat": -6.6,
-     "label": "Living"
+      "id": "bedroom1",
+      "label": "Bedroom 1",
+      "lon": 1.0,
+      "lat": -11.5,
+      "fov": 80,
+      "preview": "rooms/bedroom1-1024x512.webp",
+      "mobile": "rooms/bedroom1-2048x1024.webp",
+      "full": "rooms/bedroom1-2912x1456.webp",
+      "hotspots": [
+        {
+          "to": "living",
+          "lon": 266.2,
+          "lat": -10.8,
+          "label": "Living"
+        }
+      ],
+      "short": "Bedroom 1"
     },
     {
-     "to": "bedroom2",
-     "lon": 212.4,
-     "lat": -5.1,
-     "label": "Bedroom 2"
-    }
-   ],
-   "short": "Kitchen"
-  },
-  {
-   "id": "bedroom1",
-   "label": "Bedroom 1",
-   "lon": 1.0,
-   "lat": -11.5,
-   "fov": 80,
-   "preview": "rooms/bedroom1-1024x512.webp",
-   "mobile": "rooms/bedroom1-2048x1024.webp",
-   "full": "rooms/bedroom1-2912x1456.webp",
-   "hotspots": [
-    {
-     "to": "living",
-     "lon": 266.2,
-     "lat": -10.8,
-     "label": "Living"
-    }
-   ],
-   "short": "Bedroom 1"
-  },
-  {
-   "id": "bedroom2",
-   "label": "Bedroom 2",
-   "lon": 151.0,
-   "lat": -12,
-   "fov": 80,
-   "preview": "rooms/bedroom2-1024x512.webp",
-   "mobile": "rooms/bedroom2-2048x1024.webp",
-   "full": "rooms/bedroom2-2912x1456.webp",
-   "hotspots": [
-    {
-     "to": "kitchen",
-     "lon": 306.2,
-     "lat": -13.7,
-     "label": "Kitchen \u00b7 Dining"
+      "id": "bedroom2",
+      "label": "Bedroom 2",
+      "lon": 151.0,
+      "lat": -12,
+      "fov": 80,
+      "preview": "rooms/bedroom2-1024x512.webp",
+      "mobile": "rooms/bedroom2-2048x1024.webp",
+      "full": "rooms/bedroom2-2912x1456.webp",
+      "hotspots": [
+        {
+          "to": "kitchen",
+          "lon": 306.2,
+          "lat": -13.7,
+          "label": "Kitchen \u00b7 Dining"
+        },
+        {
+          "to": "bedroom3",
+          "lon": 233.8,
+          "lat": -17.4,
+          "label": "Bedroom 3"
+        }
+      ],
+      "short": "Bedroom 2"
     },
     {
-     "to": "bedroom3",
-     "lon": 233.8,
-     "lat": -17.4,
-     "label": "Bedroom 3"
-    }
-   ],
-   "short": "Bedroom 2"
-  },
-  {
-   "id": "bedroom3",
-   "label": "Bedroom 3",
-   "lon": 163.6,
-   "lat": -10.7,
-   "fov": 80,
-   "preview": "rooms/bedroom3-1024x512.webp",
-   "mobile": "rooms/bedroom3-2048x1024.webp",
-   "full": "rooms/bedroom3-2912x1456.webp",
-   "hotspots": [
-    {
-     "to": "bedroom2",
-     "lon": 341.0,
-     "lat": -8.0,
-     "label": "Bedroom 2"
+      "id": "bedroom3",
+      "label": "Bedroom 3",
+      "lon": 163.6,
+      "lat": -10.7,
+      "fov": 80,
+      "preview": "rooms/bedroom3-1024x512.webp",
+      "mobile": "rooms/bedroom3-2048x1024.webp",
+      "full": "rooms/bedroom3-2912x1456.webp",
+      "hotspots": [
+        {
+          "to": "bedroom2",
+          "lon": 341.0,
+          "lat": -8.0,
+          "label": "Bedroom 2"
+        },
+        {
+          "to": "toilet",
+          "lon": 100.7,
+          "lat": -1.1,
+          "label": "Toilet \u00b7 Dress"
+        }
+      ],
+      "short": "Bedroom 3"
     },
     {
-     "to": "toilet",
-     "lon": 100.7,
-     "lat": -1.1,
-     "label": "Toilet \u00b7 Dress"
-    }
-   ],
-   "short": "Bedroom 3"
-  },
-  {
-   "id": "toilet",
-   "label": "Toilet \u00b7 Dress",
-   "lon": 28.3,
-   "lat": -11.5,
-   "fov": 95,
-   "preview": "rooms/toilet-1024x512.webp",
-   "mobile": "rooms/toilet-2048x1024.webp",
-   "full": "rooms/toilet-2912x1456.webp",
-   "hotspots": [
+      "id": "toilet",
+      "label": "Toilet \u00b7 Dress",
+      "lon": 28.3,
+      "lat": -11.5,
+      "fov": 95,
+      "preview": "rooms/toilet-1024x512.webp",
+      "mobile": "rooms/toilet-2048x1024.webp",
+      "full": "rooms/toilet-2912x1456.webp",
+      "hotspots": [
+        {
+          "to": "bedroom3",
+          "lon": 271.5,
+          "lat": -3.7,
+          "label": "Bedroom 3"
+        }
+      ],
+      "short": "Toilet"
+    },
     {
-     "to": "bedroom3",
-     "lon": 271.5,
-     "lat": -3.7,
-     "label": "Bedroom 3"
+      "id": "balcony",
+      "label": "Balcony",
+      "lon": 138.0,
+      "lat": -12,
+      "fov": 90,
+      "preview": "rooms/balcony-1024x512.webp",
+      "mobile": "rooms/balcony-2048x1024.webp",
+      "full": "rooms/balcony-2912x1456.webp",
+      "hotspots": [
+        {
+          "to": "living",
+          "lon": 213.9,
+          "lat": -11.4,
+          "label": "Living"
+        }
+      ],
+      "short": "Balcony"
     }
-   ],
-   "short": "Toilet"
-  },
-  {
-   "id": "balcony",
-   "label": "Balcony",
-   "lon": 138.0,
-   "lat": -12,
-   "fov": 90,
-   "preview": "rooms/balcony-1024x512.webp",
-   "mobile": "rooms/balcony-2048x1024.webp",
-   "full": "rooms/balcony-2912x1456.webp",
-   "hotspots": [
-    {
-     "to": "living",
-     "lon": 213.9,
-     "lat": -11.4,
-     "label": "Living"
+  ],
+  "soon": [],
+  "plan": {
+    "image": "plan-mini.webp",
+    "rooms": {
+      "bedroom1": {
+        "x": 0.265,
+        "y": 0.025,
+        "w": 0.402,
+        "h": 0.174,
+        "cx": 0.482,
+        "cy": 0.166
+      },
+      "living": {
+        "x": 0.09,
+        "y": 0.199,
+        "w": 0.577,
+        "h": 0.17,
+        "cx": 0.332,
+        "cy": 0.268
+      },
+      "balcony": {
+        "x": 0.667,
+        "y": 0.136,
+        "w": 0.213,
+        "h": 0.236,
+        "cx": 0.781,
+        "cy": 0.208
+      },
+      "kitchen": {
+        "x": 0.09,
+        "y": 0.369,
+        "w": 0.677,
+        "h": 0.135,
+        "cx": 0.456,
+        "cy": 0.44
+      },
+      "bedroom2": {
+        "x": 0.208,
+        "y": 0.595,
+        "w": 0.501,
+        "h": 0.159,
+        "cx": 0.327,
+        "cy": 0.64
+      },
+      "bedroom3": {
+        "x": 0.09,
+        "y": 0.754,
+        "w": 0.405,
+        "h": 0.186,
+        "cx": 0.232,
+        "cy": 0.794
+      },
+      "toilet": {
+        "x": 0.495,
+        "y": 0.754,
+        "w": 0.214,
+        "h": 0.138,
+        "cx": 0.575,
+        "cy": 0.817
+      }
     }
-   ],
-   "short": "Balcony"
   }
- ],
- "soon": [],
- "plan": {
-  "image": "plan-mini.webp",
-  "rooms": {
-   "bedroom1": {
-    "x": 0.265,
-    "y": 0.025,
-    "w": 0.402,
-    "h": 0.174,
-    "cx": 0.482,
-    "cy": 0.166
-   },
-   "living": {
-    "x": 0.09,
-    "y": 0.199,
-    "w": 0.577,
-    "h": 0.17,
-    "cx": 0.332,
-    "cy": 0.268
-   },
-   "balcony": {
-    "x": 0.667,
-    "y": 0.136,
-    "w": 0.213,
-    "h": 0.236,
-    "cx": 0.781,
-    "cy": 0.208
-   },
-   "kitchen": {
-    "x": 0.09,
-    "y": 0.369,
-    "w": 0.677,
-    "h": 0.135,
-    "cx": 0.456,
-    "cy": 0.44
-   },
-   "bedroom2": {
-    "x": 0.208,
-    "y": 0.595,
-    "w": 0.501,
-    "h": 0.159,
-    "cx": 0.327,
-    "cy": 0.64
-   },
-   "bedroom3": {
-    "x": 0.09,
-    "y": 0.754,
-    "w": 0.405,
-    "h": 0.186,
-    "cx": 0.232,
-    "cy": 0.794
-   },
-   "toilet": {
-    "x": 0.495,
-    "y": 0.754,
-    "w": 0.214,
-    "h": 0.138,
-    "cx": 0.575,
-    "cy": 0.817
-   }
-  }
- }
 }

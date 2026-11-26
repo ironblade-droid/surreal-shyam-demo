@@ -269,8 +269,10 @@ function visibleInset() {
   return { left, right, top, bottom, cx: (left + right) / 2, cy: (top + bottom) / 2, vw: right - left, vh: Math.max(1, bottom - top) };
 }
 function layout() {
-  const vv = window.visualViewport;
-  W = Math.max(1, Math.round(innerWidth)); H = Math.max(1, Math.round(vv ? Math.min(innerHeight, vv.height) : innerHeight));
+  // Use the layout viewport (not visualViewport) so the drawing buffer, CSS canvas
+  // and pointer coordinates stay in lock-step — a mismatch was sending landscape
+  // floor taps two storeys too high and pushing Floor 1 off-screen.
+  W = Math.max(1, Math.round(innerWidth)); H = Math.max(1, Math.round(innerHeight));
   renderer.setSize(W, H, false); dirty = Math.max(dirty, 2);
   camera.aspect = W / H;
   const vis = visibleInset();
@@ -332,12 +334,17 @@ function projectWing(f: number, w: number) {
   const bb = new THREE.Box3().setFromObject(mesh);
   const c = bb.getCenter(new THREE.Vector3());
   const pts: THREE.Vector3[] = [new THREE.Vector3(c.x, c.y, w <= 2 ? bb.max.z : bb.min.z)];
+  // denser samples, including the upper half of the floor (helps Floor 1 stay on-screen)
   for (const z of [bb.max.z, bb.min.z, c.z]) for (const x of [c.x, (c.x + bb.max.x) / 2, (c.x + bb.min.x) / 2, bb.max.x, bb.min.x])
-    for (const y of [c.y, c.y + 0.6, c.y - 0.6]) pts.push(new THREE.Vector3(x, y, z));
+    for (const y of [c.y, c.y + 0.6, c.y - 0.6, bb.max.y - 0.25, bb.min.y + 0.4]) pts.push(new THREE.Vector3(x, y, z));
   const vis = visibleInset();
-  const toS = (v: THREE.Vector3) => { const q = v.clone().project(camera); return { x: (q.x + 1) / 2 * W, y: (1 - q.y) / 2 * H, z: q.z }; };
-  const inVis = (s: { x: number; y: number; z: number }) => s.z < 1 && s.x >= vis.left && s.x <= vis.right && s.y >= vis.top && s.y <= vis.bottom;
-  const onScreen = pts.map(toS).filter(s => s.z < 1 && s.x >= 0 && s.x < W && s.y >= 0 && s.y < H);
+  const rect = canvas.getBoundingClientRect();
+  const toS = (v: THREE.Vector3) => {
+    const q = v.clone().project(camera);
+    return { x: (q.x + 1) / 2 * rect.width + rect.left, y: (1 - q.y) / 2 * rect.height + rect.top, z: q.z };
+  };
+  const inVis = (s: { x: number; y: number; z: number }) => s.z < 1 && s.x >= vis.left + rect.left && s.x <= vis.right + rect.left && s.y >= vis.top + rect.top && s.y <= vis.bottom + rect.top;
+  const onScreen = pts.map(toS).filter(s => s.z < 1 && s.x >= rect.left && s.x < rect.right && s.y >= rect.top && s.y < rect.bottom);
   const hitsRight = (s: { x: number; y: number }) => { const h = pick(s.x, s.y); return !!h && h.floor === f && h.wing === w; };
   const good = onScreen.filter(hitsRight);
   const best = good.find(inVis) || good[0] || onScreen.find(inVis) || onScreen[0];
@@ -352,11 +359,16 @@ function projectWing(f: number, w: number) {
   settled: () => !focusing && Math.abs(offX - wantX) < 1 && Math.abs(offY - wantY) < 1 && Math.abs(controls.target.y - focusY) < 0.15,
   look: (p: number[], tg: number[]) => { focusing = false; controls.minDistance = 5; controls.target.set(tg[0], tg[1], tg[2]); camera.position.set(p[0], p[1], p[2]); controls.update(); lastInteract = performance.now(); invalidate(); },
   view: (az: number) => {
+    layout();
     const vis = visibleInset();
-    const d = vis.vh / H < 0.65 || camera.aspect < 0.85 ? 125 : 85;
-    focusY = 15; focusing = false;
-    controls.target.set(0, 15, 0);
-    camera.position.set(Math.sin(az) * d, 15 + (mobile ? 22 : 16), Math.cos(az) * d);
+    const span = Math.max(28, built.top + 3);
+    const frac = Math.max(0.5, vis.vh / Math.max(1, H));
+    const d = Math.max(72, Math.min(160, (span / 2) / Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) / frac));
+    const midY = span * 0.42;
+    const elev = Math.min(16, d * 0.16);
+    focusY = midY; focusing = false;
+    controls.target.set(0, midY, 0);
+    camera.position.set(Math.sin(az) * d, midY + elev, Math.cos(az) * d);
     controls.update(); layout(); offX = wantX; offY = wantY; applyOffset();
     lastInteract = performance.now(); invalidate();
   },
