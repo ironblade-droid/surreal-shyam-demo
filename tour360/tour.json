@@ -67,7 +67,7 @@
       "fov": 80,
       "preview": "rooms/bedroom1-1024x512.webp",
       "mobile": "rooms/bedroom1-2048x1024.webp",
-      "full": "rooms/bedroom1-2912x1456.webp",
+      "full": "rooms/bedroom1-4096x2048.webp",
       "hotspots": [
         {
           "to": "living",
@@ -76,7 +76,8 @@
           "label": "Living"
         }
       ],
-      "short": "Bedroom 1"
+      "short": "Bedroom 1",
+      "mid": "rooms/bedroom1-3072x1536.webp"
     },
     {
       "id": "bedroom2",
