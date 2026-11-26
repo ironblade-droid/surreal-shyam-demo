@@ -8,7 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect x=%223%22 y=%223%22 width=%2226%22 height=%2226%22 fill=%22none%22 stroke=%22%23b0894f%22 stroke-width=%223%22/%3E%3C/svg%3E">
 <title>Surreal Shyam · 1st Wing · 360° tour</title>
 <style>
-  :root{--gold:#f0c98a;--ink:#2a2116;--glass:rgba(22,19,16,.62);
+  :root{--gold:#f0c98a;--ink:#2a2116;--glass:rgba(22,19,16,.62);--glass2:rgba(22,19,16,.78);
         --st:env(safe-area-inset-top,0px);--sr:env(safe-area-inset-right,0px);--sb:env(safe-area-inset-bottom,0px);--sl:env(safe-area-inset-left,0px);--tap:44px}
   *{-webkit-tap-highlight-color:transparent;box-sizing:border-box}
   html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;background:#111;
@@ -16,51 +16,106 @@
             -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   body{position:fixed;inset:0;height:100vh;height:100dvh}
   canvas{display:block;touch-action:none;cursor:grab;width:100%;height:100%} canvas:active{cursor:grabbing}
-  .hud{position:fixed;left:calc(var(--sl) + 18px);top:calc(var(--st) + 74px);pointer-events:none;text-shadow:0 1px 10px rgba(0,0,0,.5)}
+  .hud{position:fixed;left:calc(var(--sl) + 58px);top:calc(var(--st) + 12px);pointer-events:none;text-shadow:0 1px 10px rgba(0,0,0,.5);z-index:4}
   .hud .k{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
-  .hud .t{font-size:clamp(22px,5.5vw,32px);font-weight:300;margin-top:4px}
-  /* room tabs: one horizontally scrolling row, 44px targets */
-  .tabs{position:fixed;left:calc(var(--sl) + 8px);right:calc(var(--sr) + 8px);top:calc(var(--st) + 10px);pointer-events:none}
-  .tabs-in{pointer-events:auto;display:flex;gap:2px;padding:4px;margin:0 auto;width:max-content;max-width:100%;overflow-x:auto;overflow-y:hidden;
-           border-radius:999px;background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  .hud .t{font-size:clamp(20px,5vw,30px);font-weight:300;margin-top:2px}
+  a.home{position:fixed;left:calc(var(--sl) + 10px);top:calc(var(--st) + 10px);z-index:6;width:var(--tap);height:var(--tap);
+        display:grid;place-items:center;border-radius:50%;background:var(--glass);color:#fff;text-decoration:none;font-size:20px;
+        backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12)}
+  a.home:hover{background:rgba(22,19,16,.8)}
+  /* always-visible room filmstrip */
+  .tabs{position:fixed;left:calc(var(--sl) + 8px);right:calc(var(--sr) + 8px);bottom:calc(var(--sb) + 72px);z-index:5;pointer-events:none}
+  .tabs-in{pointer-events:auto;display:flex;gap:8px;padding:6px 8px;margin:0 auto;width:max-content;max-width:100%;overflow-x:auto;overflow-y:hidden;
+           border-radius:16px;background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
            touch-action:pan-x;overscroll-behavior:contain;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch}
   .tabs-in::-webkit-scrollbar{display:none}
-  .tabs-in a,.tabs-in button{all:unset;cursor:pointer;flex:0 0 auto;scroll-snap-align:center;white-space:nowrap;min-height:var(--tap);min-width:var(--tap);
-        display:inline-flex;align-items:center;justify-content:center;padding:0 16px;border-radius:999px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#ddd;box-sizing:border-box}
-  .tabs-in a.home{padding:0 14px;font-size:18px;letter-spacing:0}
-  .tabs-in button:hover,.tabs-in a:hover{color:#fff} .tabs-in button.on{background:#f4efe6;color:var(--ink);font-weight:600}
-  .bar{position:fixed;left:50%;bottom:calc(var(--sb) + 12px);transform:translateX(-50%);display:flex;align-items:center;gap:4px;padding:5px 8px;border-radius:999px;max-width:calc(100vw - var(--sl) - var(--sr) - 16px);
-       background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-size:12px}
+  .tabs-in button{all:unset;cursor:pointer;flex:0 0 auto;scroll-snap-align:center;width:92px;display:flex;flex-direction:column;align-items:center;gap:4px;color:#ddd}
+  .tabs-in button img{width:92px;height:48px;object-fit:cover;border-radius:8px;border:2px solid transparent;background:#222;display:block}
+  .tabs-in button span{font-size:10px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;line-height:1.2;padding-bottom:2px}
+  .tabs-in button:hover span,.tabs-in button:hover img{color:#fff;border-color:rgba(255,255,255,.35)}
+  .tabs-in button.on img{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+  .tabs-in button.on span{color:var(--gold);font-weight:600}
+  /* next / prev */
+  .nav-arrow{position:fixed;top:46%;transform:translateY(-50%);z-index:5;width:48px;height:48px;border:0;border-radius:50%;
+             background:var(--glass);color:#fff;font-size:28px;line-height:1;cursor:pointer;display:grid;place-items:center;
+             backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12)}
+  .nav-arrow:hover{background:rgba(22,19,16,.85)}
+  #prev{left:calc(var(--sl) + 10px)} #next{right:calc(var(--sr) + 10px)}
+  /* mini floor plan */
+  .minimap{position:fixed;left:calc(var(--sl) + 10px);bottom:calc(var(--sb) + 154px);z-index:5;width:126px;max-height:min(42vh,260px);
+           background:var(--glass2);border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.14);
+           backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);touch-action:pan-y;overscroll-behavior:contain}
+  .minimap .mm-lab{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);padding:6px 8px 4px;pointer-events:none}
+  .minimap .mm-scroll{max-height:min(38vh,230px);overflow:auto;scrollbar-width:thin;touch-action:pan-y}
+  .minimap .mm-in{position:relative;display:block}
+  .minimap img{display:block;width:100%;height:auto;pointer-events:none}
+  .minimap .mm-room{position:absolute;border:0;padding:0;background:transparent;cursor:pointer;border-radius:2px}
+  .minimap .mm-room:hover{background:rgba(240,201,138,.28)}
+  .minimap .mm-room.on{background:rgba(240,201,138,.38);box-shadow:inset 0 0 0 1.5px var(--gold)}
+  .minimap .you{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;pointer-events:none;z-index:2}
+  .minimap .you .cone{position:absolute;left:50%;top:50%;width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;
+                      border-bottom:16px solid rgba(240,201,138,.85);transform:translate(-50%,-88%) rotate(var(--yaw,0deg));transform-origin:50% 88%;filter:drop-shadow(0 0 2px #000)}
+  .minimap .you .dot{position:absolute;left:50%;top:50%;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:var(--gold);border:2px solid #fff;box-shadow:0 0 0 3px rgba(240,201,138,.35)}
+  .bar{position:fixed;left:50%;bottom:calc(var(--sb) + 10px);transform:translateX(-50%);display:flex;align-items:center;gap:4px;padding:5px 8px;border-radius:999px;max-width:calc(100vw - var(--sl) - var(--sr) - 16px);
+       background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-size:12px;z-index:5}
   .bar button{all:unset;cursor:pointer;width:var(--tap);height:var(--tap);display:grid;place-items:center;border-radius:50%;font-size:17px;color:#eee;flex:0 0 auto}
   .bar button:hover{background:rgba(255,255,255,.12)} .bar button.act{background:var(--gold);color:var(--ink)}
   .bar .day{background:var(--gold);color:var(--ink);padding:0 12px;border-radius:999px;font-weight:600;line-height:34px}
   .bar .sep{width:1px;height:20px;background:rgba(255,255,255,.2);margin:0 2px;flex:0 0 auto}
   .bar .hint{opacity:.75;padding:0 8px;white-space:nowrap}
   #gyro[hidden],#fsx[hidden]{display:none}
-  .hs{position:fixed;transform:translate(-50%,-50%);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;user-select:none;padding:7px;touch-action:none}
-  .hs .dot{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.22);border:2px solid #fff;box-shadow:0 0 0 6px rgba(255,255,255,.12);
+  .hs{position:fixed;transform:translate(-50%,-50%);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;user-select:none;padding:8px;touch-action:none;z-index:3}
+  .hs .dot{width:36px;height:36px;border-radius:50%;background:rgba(240,201,138,.28);border:2px solid #fff;box-shadow:0 0 0 6px rgba(255,255,255,.14);
            display:grid;place-items:center;transition:transform .2s} .hs .dot::after{content:"";width:9px;height:9px;border-radius:50%;background:#fff}
-  .hs:hover .dot{transform:scale(1.15)}
-  .hs .lab{font-size:11px;letter-spacing:.12em;text-transform:uppercase;background:var(--glass);padding:5px 10px;border-radius:999px;white-space:nowrap}
-  #fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .35s}
-  #load{position:fixed;inset:0;display:grid;place-items:center;color:#ccc;font-size:14px}
-  .q{position:fixed;right:calc(var(--sr) + 14px);bottom:calc(var(--sb) + 76px);font-size:10px;opacity:.6;letter-spacing:.1em;text-transform:uppercase;pointer-events:none}
-  body.single .tabs,body.single .hs,body.single .q{display:none}
-  /* immersive fallback where the Fullscreen API is missing (iPhone Safari) */
-  body.pfs .hud,body.pfs .tabs,body.pfs .q,body.pfs .bar>*:not(#fsx){display:none}
+  .hs .ring{position:absolute;width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,.7);animation:ping 1.8s ease-out infinite;pointer-events:none;top:8px}
+  .hs:hover .dot{transform:scale(1.12)}
+  .hs .lab{font-size:11px;letter-spacing:.12em;text-transform:uppercase;background:var(--glass);padding:5px 10px;border-radius:999px;white-space:nowrap;border:1px solid rgba(255,255,255,.16)}
+  @keyframes ping{0%{transform:scale(1);opacity:.8}70%{transform:scale(1.85);opacity:0}100%{transform:scale(1.85);opacity:0}}
+  @media (prefers-reduced-motion:reduce){ .hs .ring{animation:none} }
+  #load{position:fixed;inset:0;display:grid;place-items:center;color:#ccc;font-size:14px;z-index:8;background:#111}
+  .q{position:fixed;right:calc(var(--sr) + 14px);top:calc(var(--st) + 16px);font-size:10px;opacity:.6;letter-spacing:.1em;text-transform:uppercase;pointer-events:none;z-index:4}
+  body.single .tabs,body.single .hs,body.single .q,body.single .minimap,body.single .nav-arrow{display:none}
+  body.pfs .hud,body.pfs .tabs,body.pfs .q,body.pfs .minimap,body.pfs .nav-arrow,body.pfs a.home,body.pfs .bar>*:not(#fsx){display:none}
   body.pfs .bar{background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;left:auto;right:calc(var(--sr) + 12px);transform:none;top:calc(var(--st) + 12px);bottom:auto}
   body.pfs #fsx{display:grid;background:var(--glass)}
-  @media (max-width:600px){ .bar .hint,.bar .day,.bar .sep.d{display:none} .hs .lab{font-size:10px;padding:4px 8px} .hud{top:calc(var(--st) + 72px)} }
-  /* landscape phones: little height, keep the view clear */
-  @media (max-height:520px){ .hud .k{display:none} .hud{top:calc(var(--st) + 66px)} .hud .t{font-size:20px} .q{display:none}
-     .bar{bottom:calc(var(--sb) + 8px)} .tabs{top:calc(var(--st) + 6px)} }
-  @media (max-height:520px) and (orientation:landscape){ .bar{left:auto;right:calc(var(--sr) + 10px);transform:none} }
+  @media (max-width:600px){
+    .bar .hint,.bar .day,.bar .sep.d{display:none}
+    .hs .lab{font-size:10px;padding:4px 8px}
+    .tabs-in button{width:76px} .tabs-in button img{width:76px;height:40px}
+    .minimap{width:104px;bottom:calc(var(--sb) + 150px);max-height:min(32vh,190px)}
+    .nav-arrow{width:44px;height:44px;font-size:24px}
+  }
+  @media (max-height:520px){
+    .hud .k{display:none} .hud{top:calc(var(--st) + 8px)} .hud .t{font-size:18px} .q{display:none}
+    .bar{bottom:calc(var(--sb) + 8px)}
+    .tabs{bottom:calc(var(--sb) + 54px)}
+    .tabs-in{padding:4px 6px;gap:6px}
+    .tabs-in button span{display:none}
+    .tabs-in button{width:64px} .tabs-in button img{width:64px;height:36px;margin-bottom:0}
+    .minimap{width:88px;max-height:min(46vh,170px);bottom:auto;top:calc(var(--st) + 54px)}
+  }
+  @media (max-height:520px) and (orientation:landscape){
+    .bar{left:auto;right:calc(var(--sr) + 10px);transform:none}
+    #next{right:calc(var(--sr) + 10px);top:auto;bottom:calc(var(--sb) + 58px);transform:none}
+  }
 </style>
 </head>
 <body>
 <div id="load">Loading tour…</div>
+<a class="home" id="home" href="../" aria-label="Back to the building">←</a>
 <div class="hud"><div class="k" id="kicker">360° · Surreal Shyam · 1st Wing</div><div class="t" id="title">Living</div></div>
-<nav class="tabs" aria-label="Rooms"><div class="tabs-in" id="tabs"><a class="home" id="home" href="../" aria-label="Back to the building">←</a></div></nav>
+<nav class="tabs" aria-label="Rooms"><div class="tabs-in" id="tabs"></div></nav>
+<button class="nav-arrow" id="prev" type="button" aria-label="Previous room">‹</button>
+<button class="nav-arrow" id="next" type="button" aria-label="Next room">›</button>
+<div class="minimap" id="minimap" hidden>
+  <div class="mm-lab">Floor plan</div>
+  <div class="mm-scroll" id="mmScroll">
+    <div class="mm-in" id="mmIn">
+      <img id="mmImg" alt="Floor plan of the 1st Wing">
+      <div class="you" id="mmYou"><div class="cone"></div><div class="dot"></div></div>
+    </div>
+  </div>
+</div>
 <div id="hots"></div>
 <div class="bar">
   <span class="day">☀ Day</span><span class="sep d"></span>
@@ -71,34 +126,64 @@
   <span class="hint" id="hint">Drag to look around</span>
 </div>
 <div class="q" id="q"></div>
-<div id="fade"></div>
 <script type="module">
 import * as THREE from "./three.module.min.js";
 const q = new URLSearchParams(location.search);
 const single = q.get("src");
-{ const from = q.get("from"); const hb = document.getElementById("home"); if (hb && from && /^floor-\d+(\/wing-\d+)?$/.test(from)) hb.setAttribute("href", "../#" + from); }                       // legacy single-pano mode (shot scripts)
+{ const from = q.get("from"); const hb = document.getElementById("home"); if (hb && from && /^floor-\d+(\/wing-\d+)?$/.test(from)) hb.setAttribute("href", "../#" + from); }
 const $ = id => document.getElementById(id);
 const touchy = matchMedia("(pointer:coarse)").matches || navigator.maxTouchPoints > 0;
 if (touchy) $("hint").textContent = "Drag to look · pinch to zoom";
-// ---- image quality: 2912 on desktop, 2048 on small screens / slow links, 1024 preview always first
 const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-const slow = !!conn && (conn.saveData || /(^|-)(2|3)g$/.test(conn.effectiveType || "") || (conn.downlink && conn.downlink < 1.5));
-const smallScreen = Math.min(innerWidth, screen.width || innerWidth) < 900;
-let lon = parseFloat(q.get("lon") ?? "202"), lat = parseFloat(q.get("lat") ?? "-4"), fov = parseFloat(q.get("fov") ?? "78");
+const slow = !!conn && (conn.saveData || /(^|-)(2|3)g$/.test(conn.effectiveType || ""));
+let lon = parseFloat(q.get("lon") ?? "202"), lat = parseFloat(q.get("lat") ?? "-4"), fov = parseFloat(q.get("fov") ?? "78"), fovWant = fov;
 let auto = q.get("auto") !== "0" && !q.has("lon") && !matchMedia("(prefers-reduced-motion:reduce)").matches;
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.NoToneMapping;
 const maxTex = renderer.capabilities.maxTextureSize;
-let variant = (q.get("q") === "hd") ? "full" : (q.get("q") === "mobile" || smallScreen || slow || maxTex < 4096) ? "mobile" : "full";
-renderer.outputColorSpace = THREE.SRGBColorSpace; document.body.appendChild(renderer.domElement);
+const desktop = innerWidth >= 900;
+let variant = (q.get("q") === "mobile" || maxTex < 2912) ? "mobile" : (q.get("q") === "hd" || (desktop && !slow)) ? "full" : "mobile";
+document.body.appendChild(renderer.domElement);
 const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(fov, innerWidth / innerHeight, 0.1, 1000);
-const geo = new THREE.SphereGeometry(100, 96, 64); geo.scale(-1, 1, 1);
-const mat = new THREE.MeshBasicMaterial({ color: 0xffffff }); scene.add(new THREE.Mesh(geo, mat));
+const geo = new THREE.SphereGeometry(100, 128, 80); geo.scale(-1, 1, 1);
+function makeMat() {
+  const m = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1, depthWrite: false, toneMapped: false });
+  m.onBeforeCompile = shader => {
+    shader.fragmentShader = shader.fragmentShader.replace("#include <map_fragment>", `#include <map_fragment>
+#ifdef USE_MAP
+      vec2 _px = 1.0 / vec2(textureSize(map, 0));
+      vec3 _blur = 0.25 * (
+        texture2D(map, vMapUv + vec2(_px.x, 0.0)).rgb +
+        texture2D(map, vMapUv - vec2(_px.x, 0.0)).rgb +
+        texture2D(map, vMapUv + vec2(0.0, _px.y)).rgb +
+        texture2D(map, vMapUv - vec2(0.0, _px.y)).rgb
+      );
+      diffuseColor.rgb += (diffuseColor.rgb - _blur) * 0.32;
+      diffuseColor.rgb = (diffuseColor.rgb - vec3(0.5)) * 1.05 + vec3(0.5);
+#endif`);
+  };
+  return m;
+}
+const matA = makeMat(), matB = makeMat();
+const meshA = new THREE.Mesh(geo, matA), meshB = new THREE.Mesh(geo.clone(), matB);
+meshB.scale.setScalar(0.998); matB.opacity = 0; matB.transparent = true; meshB.visible = false;
+scene.add(meshA, meshB);
+let frontMat = matA, backMat = matB, frontMesh = meshA, backMesh = meshB;
 const loader = new THREE.TextureLoader();
-function prep(t) { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); t.minFilter = THREE.LinearMipmapLinearFilter; return t; }
-function setTex(t) { const old = mat.map; mat.map = t; mat.needsUpdate = true; if (old && old !== t) old.dispose(); }
+const maxAniso = Math.max(1, renderer.capabilities.getMaxAnisotropy());
+function prep(t) {
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = maxAniso;
+  t.generateMipmaps = true;
+  t.minFilter = THREE.LinearMipmapLinearFilter;
+  t.magFilter = THREE.LinearFilter;
+  t.needsUpdate = true;
+  return t;
+}
+function setMap(mat, t) { const old = mat.map; mat.map = t; mat.needsUpdate = true; if (old && old !== t) old.dispose(); }
 const dirOf = (lo, la) => { const phi = THREE.MathUtils.degToRad(90 - la), th = THREE.MathUtils.degToRad(lo);
   return new THREE.Vector3(Math.sin(phi) * Math.cos(th), Math.cos(phi), Math.sin(phi) * Math.sin(th)); };
-// ---- size: DPR capped at 2; portrait phones get a taller vertical fov so the horizontal view is not a keyhole
 let W = 0, H = 0;
 function resize() {
   const vv = window.visualViewport;
@@ -112,69 +197,174 @@ addEventListener("resize", resize);
 addEventListener("orientationchange", () => { resize(); setTimeout(resize, 150); setTimeout(resize, 500); });
 window.visualViewport?.addEventListener("resize", resize);
 
-let tour = null, room = null, token = 0, last = performance.now(), idle = 0;
-const fade = $("fade");
+let tour = null, room = null, token = 0, last = performance.now(), idle = 0, vLon = 0, vLat = 0;
 const qlabel = t => { $("q").textContent = t; };
-async function show(id, first = false) {
-  const r = tour.rooms.find(x => x.id === id) || tour.rooms[0]; const my = ++token;
-  if (!first) { fade.style.opacity = 1; await new Promise(s => setTimeout(s, 300)); }
-  if (window.__pano) window.__pano.hd = false;
-  const pre = prep(await loader.loadAsync(r.preview)); if (my !== token) return;   // 1024 preview first
-  setTex(pre); room = r; lon = r.lon; lat = r.lat; fov = r.fov || 78; idle = 0;
+const shortOf = r => r.short || (r.label || "").split(" · ")[0];
+function ease(t) { return t * t * (3 - 2 * t); }
+function swapFront() {
+  const tm = frontMat, ts = frontMesh;
+  frontMat = backMat; frontMesh = backMesh;
+  backMat = tm; backMesh = ts;
+}
+let fadeGen = 0;
+async function fadeTo(my, ms = 420) {
+  const gen = ++fadeGen;
+  backMesh.visible = true;
+  backMat.transparent = true; frontMat.transparent = true;
+  backMat.opacity = 0; frontMat.opacity = 1;
+  const t0 = performance.now();
+  await new Promise(res => {
+    const step = now => {
+      if (gen !== fadeGen || my !== token) return res();
+      const t = Math.min(1, (now - t0) / ms);
+      const e = ease(t);
+      backMat.opacity = e; frontMat.opacity = 1 - e;
+      if (t < 1) requestAnimationFrame(step); else res();
+    };
+    requestAnimationFrame(step);
+  });
+  if (gen !== fadeGen || my !== token) return false;
+  frontMat.opacity = 0; frontMesh.visible = false;
+  backMat.opacity = 1; backMat.transparent = false;
+  swapFront();
+  return true;
+}
+let showBusy = false, showQueued = null;
+function syncChrome(r, first) {
   $("title").textContent = r.label;
-  document.querySelectorAll("#tabs button").forEach(b => { const on = b.dataset.id === r.id; b.classList.toggle("on", on);
-    if (on) b.scrollIntoView({ block: "nearest", inline: "center", behavior: first ? "auto" : "smooth" }); });
-  buildHotspots(r); history.replaceState(null, "", "?room=" + r.id + (q.get("q") ? "&q=" + q.get("q") : ""));
-  $("load")?.remove(); fade.style.opacity = 0; qlabel("preview");
+  document.querySelectorAll("#tabs button").forEach(b => {
+    const on = b.dataset.id === r.id; b.classList.toggle("on", on);
+    if (on) b.scrollIntoView({ block: "nearest", inline: "center", behavior: first ? "auto" : "smooth" });
+  });
+  document.querySelectorAll(".mm-room").forEach(b => b.classList.toggle("on", b.dataset.id === r.id));
+  const idx = tour.rooms.findIndex(x => x.id === r.id);
+  $("prev").disabled = idx <= 0; $("next").disabled = idx >= tour.rooms.length - 1;
+  $("prev").style.opacity = idx <= 0 ? .35 : 1;
+  $("next").style.opacity = idx >= tour.rooms.length - 1 ? .35 : 1;
+  scrollPlan(r);
+}
+function scrollPlan(r) {
+  const box = tour.plan && tour.plan.rooms && tour.plan.rooms[r.id];
+  const you = $("mmYou"), sc = $("mmScroll"), img = $("mmImg");
+  if (!box || !you || !sc || !img || !img.naturalWidth) return;
+  you.style.left = (box.cx * 100) + "%"; you.style.top = (box.cy * 100) + "%";
+  const y = box.cy * sc.scrollHeight - sc.clientHeight / 2;
+  sc.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+}
+async function show(id, first = false) {
+  if (showBusy && !first) { showQueued = id; return; }
+  showBusy = true;
+  try { await showInner(id, first); }
+  finally {
+    showBusy = false;
+    if (showQueued && showQueued !== (room && room.id)) { const n = showQueued; showQueued = null; show(n); }
+    else showQueued = null;
+  }
+}
+async function showInner(id, first = false) {
+  const r = tour.rooms.find(x => x.id === id) || tour.rooms[0]; const my = ++token;
+  if (window.__pano) window.__pano.hd = false;
+  const pre = prep(await loader.loadAsync(r.preview)); if (my !== token) { pre.dispose(); return; }
+  room = r; lon = r.lon; lat = r.lat; fov = fovWant = r.fov || 78; idle = 0; vLon = 0; vLat = 0;
+  syncChrome(r, first);
+  const keep = q.get("from") ? "&from=" + encodeURIComponent(q.get("from")) : "";
+  history.replaceState(null, "", "?room=" + r.id + (q.get("q") ? "&q=" + q.get("q") : "") + keep);
+  if (first) {
+    setMap(frontMat, pre); frontMat.opacity = 1; frontMat.transparent = false; frontMesh.visible = true;
+    backMat.opacity = 0; backMesh.visible = false;
+  } else {
+    setMap(backMat, pre);
+    const ok = await fadeTo(my);
+    if (!ok || my !== token) return;
+  }
+  $("load")?.remove(); qlabel("preview");
   if (window.__pano) { window.__pano.ready = true; window.__pano.hd = false; }
+  buildHotspots(r);
   const src = variant === "mobile" && r.mobile ? r.mobile : r.full;
-  loader.loadAsync(src).then(t => { if (my === token) { setTex(prep(t)); qlabel(variant === "mobile" ? "2K" : "HD"); if (window.__pano) window.__pano.hd = true; } })
+  loader.loadAsync(src).then(tex => { if (my === token) { setMap(frontMat, prep(tex)); qlabel(variant === "mobile" ? "2K" : "HD"); if (window.__pano) window.__pano.hd = true; } else tex.dispose(); })
     .catch(() => qlabel("preview"));
 }
+function stepRoom(dir) {
+  if (!tour || !room) return;
+  const i = tour.rooms.findIndex(x => x.id === room.id);
+  const n = tour.rooms[i + dir]; if (n) show(n.id);
+}
+$("prev").onclick = () => stepRoom(-1);
+$("next").onclick = () => stepRoom(1);
 const hots = $("hots"); let hsEls = [];
 function buildHotspots(r) {
   hots.innerHTML = ""; hsEls = (r.hotspots || []).map(h => {
     const d = document.createElement("div"); d.className = "hs"; d.setAttribute("role", "button"); d.setAttribute("aria-label", "Go to " + h.label);
-    d.innerHTML = `<div class="dot"></div><div class="lab">${h.label}</div>`;
+    d.innerHTML = `<div class="ring"></div><div class="dot"></div><div class="lab">${h.label}</div>`;
     d.addEventListener("pointerdown", e => e.stopPropagation());
     d.addEventListener("click", () => show(h.to)); hots.appendChild(d); return { el: d, v: dirOf(h.lon, h.lat) }; });
 }
+function buildPlan() {
+  const plan = tour.plan; if (!plan) return;
+  const img = $("mmImg"), hold = $("mmIn"), map = $("minimap");
+  img.src = plan.image;
+  for (const r of tour.rooms) {
+    const b = plan.rooms[r.id]; if (!b) continue;
+    const el = document.createElement("button"); el.type = "button"; el.className = "mm-room"; el.dataset.id = r.id;
+    el.style.left = (b.x * 100) + "%"; el.style.top = (b.y * 100) + "%";
+    el.style.width = (b.w * 100) + "%"; el.style.height = (b.h * 100) + "%";
+    el.setAttribute("aria-label", "Go to " + shortOf(r));
+    el.addEventListener("pointerdown", e => e.stopPropagation());
+    el.onclick = () => show(r.id);
+    hold.insertBefore(el, $("mmYou"));
+  }
+  img.onload = () => { map.hidden = false; if (room) { syncChrome(room, true); } };
+}
 if (single) {
   document.body.classList.add("single");
-  setTex(prep(await loader.loadAsync(single))); $("load").remove();
+  setMap(frontMat, prep(await loader.loadAsync(single))); $("load").remove();
   $("title").textContent = q.get("title") || "Living · Dining · Kitchen";
 } else {
   tour = await (await fetch("tour.json")).json();
   const tabs = $("tabs");
-  for (const r of tour.rooms) { const b = document.createElement("button"); b.textContent = r.label.split(" · ")[0]; b.dataset.id = r.id; b.onclick = () => show(r.id); tabs.appendChild(b); }
+  for (const r of tour.rooms) {
+    const b = document.createElement("button"); b.dataset.id = r.id;
+    b.innerHTML = `<img src="${r.preview}" alt="" draggable="false"><span>${shortOf(r)}</span>`;
+    b.onclick = () => show(r.id); tabs.appendChild(b);
+  }
+  buildPlan();
   await show(q.get("room") || "living", true);
-  if (q.has("lon")) { lon = parseFloat(q.get("lon")); lat = parseFloat(q.get("lat") ?? "0"); fov = parseFloat(q.get("fov") ?? "78"); }
+  if (q.has("lon")) { lon = parseFloat(q.get("lon")); lat = parseFloat(q.get("lat") ?? "0"); fov = fovWant = parseFloat(q.get("fov") ?? "78"); }
 }
-// ---- controls: pointer events (mouse + touch), two-finger pinch zoom, wheel
 const el = renderer.domElement;
-const ptrs = new Map(); let drag = null, pinch = null, gyroOn = false, gyroOff = 0;
+const ptrs = new Map(); let drag = null, pinch = null, gyroOn = false, gyroOff = 0, lastMove = 0;
 const clampFov = f => Math.max(30, Math.min(105, f));
 const pdist = () => { const [a, b] = [...ptrs.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
-const rebase = () => { const p = [...ptrs.values()][0]; drag = p ? { x: p.x, y: p.y, lon, lat } : null; };
-el.addEventListener("pointerdown", e => { ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); try { el.setPointerCapture(e.pointerId); } catch {} idle = 0;
+const rebase = () => { const p = [...ptrs.values()][0]; drag = p ? { x: p.x, y: p.y, lon, lat } : null; lastMove = performance.now(); };
+el.addEventListener("pointerdown", e => { ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); try { el.setPointerCapture(e.pointerId); } catch {} idle = 0; vLon = 0; vLat = 0;
   if (ptrs.size === 2) { drag = null; pinch = { d: pdist(), fov }; } else if (ptrs.size === 1) rebase(); });
 el.addEventListener("pointermove", e => { const p = ptrs.get(e.pointerId); if (!p) return; p.x = e.clientX; p.y = e.clientY; idle = 0;
-  if (ptrs.size >= 2 && pinch) { fov = clampFov(pinch.fov * pinch.d / Math.max(1, pdist())); return; }
-  if (!drag) return; const k = vfov() / H;
-  if (gyroOn) { gyroOff = (gyroOff - (e.clientX - drag.x) * k); drag.x = e.clientX; }
-  else { lon = drag.lon - (e.clientX - drag.x) * k; lat = Math.max(-85, Math.min(85, drag.lat + (e.clientY - drag.y) * k)); } });
-const up = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (ptrs.size === 1) rebase(); else if (!ptrs.size) drag = null; idle = 0; };
+  if (ptrs.size >= 2 && pinch) { fov = fovWant = clampFov(pinch.fov * pinch.d / Math.max(1, pdist())); return; }
+  if (!drag) return; const k = vfov() / H; const now = performance.now(); const dt = Math.max(8, now - lastMove) / 1000;
+  const dLon = -(e.clientX - drag.x) * k, dLat = (e.clientY - drag.y) * k;
+  if (gyroOn) { gyroOff = (gyroOff + dLon); drag.x = e.clientX; }
+  else {
+    const nLon = drag.lon + dLon, nLat = Math.max(-85, Math.min(85, drag.lat + dLat));
+    vLon = (nLon - lon) / dt; vLat = (nLat - lat) / dt;
+    lon = nLon; lat = nLat;
+  }
+  lastMove = now;
+});
+const up = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (ptrs.size === 1) rebase(); else if (!ptrs.size && drag) {
+  const cap = 240; vLon = Math.max(-cap, Math.min(cap, vLon)); vLat = Math.max(-cap, Math.min(cap, vLat));
+  if (performance.now() - lastMove > 160) { vLon = 0; vLat = 0; }
+  drag = null;
+} idle = 0; };
 el.addEventListener("pointerup", up); el.addEventListener("pointercancel", up); el.addEventListener("lostpointercapture", up);
-const zoom = d => { fov = clampFov(fov + d); idle = 0; };
+const zoom = d => { fovWant = clampFov(fovWant + d); idle = 0; };
 el.addEventListener("wheel", e => { zoom(e.deltaY * 0.04); e.preventDefault(); }, { passive: false });
-for (const ev of ["gesturestart", "gesturechange", "gestureend"]) document.addEventListener(ev, e => e.preventDefault());   // iOS page pinch-zoom
-el.addEventListener("touchmove", e => e.preventDefault(), { passive: false });                                          // no scroll / rubber-band
+for (const ev of ["gesturestart", "gesturechange", "gestureend"]) document.addEventListener(ev, e => e.preventDefault());
+el.addEventListener("touchmove", e => e.preventDefault(), { passive: false });
 el.addEventListener("contextmenu", e => e.preventDefault());
 $("zin").onclick = () => zoom(-8); $("zout").onclick = () => zoom(8);
 const play = $("play");
 const syncPlay = () => play.textContent = auto ? "❚❚" : "▶"; syncPlay();
 play.onclick = () => { auto = !auto; idle = 99; syncPlay(); };
-// ---- fullscreen, with an immersive-CSS fallback where the API is missing (iPhone Safari)
 const root = document.documentElement;
 const fsReq = root.requestFullscreen || root.webkitRequestFullscreen, fsExit = document.exitFullscreen || document.webkitExitFullscreen;
 const inFs = () => document.fullscreenElement || document.webkitFullscreenElement;
@@ -185,8 +375,18 @@ function toggleFs() {
 }
 $("fs").onclick = toggleFs; $("fsx").onclick = () => { document.body.classList.remove("pfs"); if (inFs()) fsExit.call(document); $("fsx").hidden = true; setTimeout(resize, 200); };
 new MutationObserver(() => { $("fsx").hidden = !document.body.classList.contains("pfs"); }).observe(document.body, { attributes: true, attributeFilter: ["class"] });
-addEventListener("keydown", e => { if (e.key === "f") toggleFs(); if (e.key === " ") play.click(); });
-// ---- gyroscope look-around (iOS needs a tap for the permission prompt)
+addEventListener("keydown", e => {
+  if (e.key === "f") toggleFs();
+  if (e.key === " ") { e.preventDefault(); play.click(); }
+  if (e.key === "ArrowLeft" && (e.altKey || e.shiftKey)) stepRoom(-1);
+  else if (e.key === "ArrowRight" && (e.altKey || e.shiftKey)) stepRoom(1);
+  else if (e.key === "ArrowLeft") { lon -= 8; idle = 0; }
+  else if (e.key === "ArrowRight") { lon += 8; idle = 0; }
+  else if (e.key === "ArrowUp") { lat = Math.min(85, lat + 6); idle = 0; }
+  else if (e.key === "ArrowDown") { lat = Math.max(-85, lat - 6); idle = 0; }
+  if (e.key === "[" || e.key === ",") stepRoom(-1);
+  if (e.key === "]" || e.key === ".") stepRoom(1);
+});
 const gb = $("gyro"), DOE = window.DeviceOrientationEvent;
 if (touchy && DOE) gb.hidden = false;
 const _q = new THREE.Quaternion(), _q1 = new THREE.Quaternion(-Math.SQRT1_2, 0, 0, Math.SQRT1_2), _q0 = new THREE.Quaternion(), _e = new THREE.Euler(), _f = new THREE.Vector3(), _z = new THREE.Vector3(0, 0, 1);
@@ -208,21 +408,28 @@ async function setGyro(on) {
   gb.classList.toggle("act", gyroOn);
 }
 gb.onclick = () => setGyro(!gyroOn);
-// ---- render loop
 const v = new THREE.Vector3();
 function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000); last = now; idle += dt;
-  if (auto && !drag && !pinch && idle > 3) lon += dt * 2.5;
+  if (!drag && !pinch && !gyroOn) {
+    const damp = Math.exp(-dt * 3.6);
+    vLon *= damp; vLat *= damp;
+    if (Math.abs(vLon) < 0.6) vLon = 0; if (Math.abs(vLat) < 0.6) vLat = 0;
+    lon += vLon * dt; lat = Math.max(-85, Math.min(85, lat + vLat * dt));
+  }
+  if (auto && !drag && !pinch && !gyroOn && idle > 3) lon += dt * 2.5;
+  fov += (fovWant - fov) * (1 - Math.exp(-dt * 12));
   camera.fov = vfov(); camera.updateProjectionMatrix();
   camera.lookAt(dirOf(lon, lat)); renderer.render(scene, camera);
+  const you = $("mmYou"); if (you) you.style.setProperty("--yaw", lon + "deg");
   for (const h of hsEls) { v.copy(h.v).multiplyScalar(50).project(camera);
-    const vis = v.z < 1 && Math.abs(v.x) < 1.1 && Math.abs(v.y) < 1.1;
+    const vis = v.z < 1 && Math.abs(v.x) < 1.15 && Math.abs(v.y) < 1.15;
     h.el.style.display = vis ? "flex" : "none";
     if (vis) { h.el.style.left = ((v.x + 1) / 2 * W) + "px"; h.el.style.top = ((1 - v.y) / 2 * H) + "px"; } }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
-window.__pano = { ready: !!mat.map, hd: false, show: id => show(id), set: (a, b, f) => { lon = a; lat = b; if (f) fov = f; }, get room() { return room?.id; }, get view() { return {lon, lat, fov}; }, get variant() { return variant; }, get size() { return {W, H, dpr: renderer.getPixelRatio()}; } };
+window.__pano = { ready: !!frontMat.map, hd: false, show: id => show(id), set: (a, b, f) => { lon = a; lat = b; if (f) fov = fovWant = f; }, get room() { return room?.id; }, get view() { return {lon, lat, fov}; }, get variant() { return variant; }, get size() { return {W, H, dpr: renderer.getPixelRatio()}; } };
 </script>
 </body>
 </html>

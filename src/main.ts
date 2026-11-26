@@ -172,7 +172,7 @@ function openModal(title: string, body: string) {
 }
 function closeModal() { if (!modal.hidden) { modal.hidden = true; modal.innerHTML = ""; } }
 modal.addEventListener("click", e => { const t = e.target as HTMLElement; if (t.closest("[data-act=mclose]") || t.classList.contains("mb")) closeModal(); });
-$("bPlate").onclick = () => openModal("Typical floor plate · 4 wings", `<img src="img/floor-plate.webp" alt="Typical floor plan of all four wings around the lobby">`);
+$("bPlate").onclick = () => openModal("Typical floor plan · 4 wings", `<img src="img/floor-plate.webp" alt="Typical floor plan of all four wings around the lobby">`);
 $("bRender").onclick = () => openModal("Elevation · builder's render", `<div style="display:grid;gap:12px;justify-items:center"><img src="img/exterior-corner.webp" alt="Surreal Shyam corner render"><img src="img/exterior-front.webp" alt="Surreal Shyam front elevation"></div>`);
 $("bLoc").onclick = () => openModal("Location", `<div class="loc"><b>${PROJECT.name}</b><br>${PROJECT.address}<br><br>
   On the main 80' road, close to Celebration Mall, schools and the city's lifestyle destinations.<br><br>
