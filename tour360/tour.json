@@ -159,7 +159,7 @@
       "fov": 90,
       "preview": "rooms/balcony-1024x512.webp",
       "mobile": "rooms/balcony-2048x1024.webp",
-      "full": "rooms/balcony-2912x1456.webp",
+      "full": "rooms/balcony-4096x2048.webp",
       "hotspots": [
         {
           "to": "living",
@@ -168,7 +168,8 @@
           "label": "Living"
         }
       ],
-      "short": "Balcony"
+      "short": "Balcony",
+      "mid": "rooms/balcony-3072x1536.webp"
     }
   ],
   "soon": [],
