@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
-import { buildScene, floorY, FLOOR_H } from "./building";
+import { floorY, FLOOR_H } from "./building";
+import { buildPhotoreal } from "./photoreal";
 import { PROJECT, WINGS, unitNo, sqft, type Wing } from "./data";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -10,36 +10,28 @@ const coarse = matchMedia("(pointer:coarse)").matches;
 const mobile = coarse || Math.min(innerWidth, innerHeight) < 600;
 const F = PROJECT.floors;
 
-// ------------------------------------------------------------------ renderer, scene, camera
+// ------------------------------------------------------------------ renderer, scene (photoreal GLB + HDRI)
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
-renderer.setPixelRatio(Math.min(devicePixelRatio || 1, mobile ? 1.75 : 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, mobile ? 1.5 : 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.92;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 const scene = new THREE.Scene();
-const pmrem = new THREE.PMREMGenerator(renderer);
-scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture; scene.environmentIntensity = 0.6;
-// dusk sky dome like the brochure render
-const sky = new THREE.Mesh(new THREE.SphereGeometry(900, 32, 16), new THREE.ShaderMaterial({
-  side: THREE.BackSide, depthWrite: false, fog: false,
-  uniforms: { top: { value: new THREE.Color(0x5b7fae) }, mid: { value: new THREE.Color(0xa9bdd6) }, low: { value: new THREE.Color(0xf1d2ad) } },
-  vertexShader: "varying vec3 vp; void main(){ vp = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }",
-  fragmentShader: "uniform vec3 top, mid, low; varying vec3 vp; void main(){ float h = clamp(vp.y, -0.2, 1.0);" +
-    " vec3 c = h < 0.12 ? mix(low, mid, smoothstep(-0.02, 0.12, h)) : mix(mid, top, smoothstep(0.12, 0.7, h)); gl_FragColor = vec4(c, 1.0); }",
-}));
-scene.add(sky);
-scene.fog = new THREE.Fog(0xcfd3d6, 180, 620);
-scene.add(new THREE.HemisphereLight(0xdfe6f5, 0x8a7a66, 1.25));
-const sun = new THREE.DirectionalLight(0xffdcb0, 2.0);
-sun.position.set(-55, 62, 70); sun.castShadow = true;
+scene.fog = new THREE.Fog(0x3c4a63, 160, 520);
+const hemi = new THREE.HemisphereLight(0xdfe6f5, 0x8a7a66, 0.3); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffdcb0, 1.0);
+sun.position.set(-45, 55, 60); sun.castShadow = true;
 sun.shadow.mapSize.set(mobile ? 1024 : 2048, mobile ? 1024 : 2048);
-Object.assign(sun.shadow.camera, { left: -45, right: 45, top: 45, bottom: -45, near: 10, far: 220 }); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.04;
+Object.assign(sun.shadow.camera, { left: -40, right: 40, top: 40, bottom: -40, near: 10, far: 200 }); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.04;
+sun.shadow.radius = 4;
 scene.add(sun);
-const built = buildScene(scene, { mobile });
+const built = buildPhotoreal(scene, renderer, sun, hemi, { mobile, onChange: () => invalidate() });
+let modelReady = false;
+built.ready.then(() => { modelReady = true; syncTargets(); invalidate(); }).catch(e => { console.error("model load failed", e); });
 
 const camera = new THREE.PerspectiveCamera(38, 1, 0.5, 2000);
-const dist0 = mobile ? 120 : 80;
-camera.position.set(-0.58 * dist0, mobile ? 28 : 24, 0.81 * dist0);
+const dist0 = mobile ? 130 : 68;
+camera.position.set(-0.58 * dist0, mobile ? 10 : 6, 0.81 * dist0);
 const controls = new OrbitControls(camera, canvas);
 controls.target.set(0, 15, 0); controls.enableDamping = true; controls.dampingFactor = 0.08; controls.enablePan = false;
 controls.minDistance = 24; controls.maxDistance = 150; controls.maxPolarAngle = 1.48; controls.minPolarAngle = 0.25;
@@ -174,6 +166,8 @@ function closeModal() { if (!modal.hidden) { modal.hidden = true; modal.innerHTM
 modal.addEventListener("click", e => { const t = e.target as HTMLElement; if (t.closest("[data-act=mclose]") || t.classList.contains("mb")) closeModal(); });
 $("bPlate").onclick = () => openModal("Typical floor plan · 4 wings", `<img src="img/floor-plate.webp" alt="Typical floor plan of all four wings around the lobby">`);
 $("bRender").onclick = () => openModal("Elevation · builder's render", `<div style="display:grid;gap:12px;justify-items:center"><img src="img/exterior-corner.webp" alt="Surreal Shyam corner render"><img src="img/exterior-front.webp" alt="Surreal Shyam front elevation"></div>`);
+$("bMode").onclick = () => { const d = built.mode === "dusk"; built.setMode(d ? "day" : "dusk");
+  $("bMode").innerHTML = d ? "☾ Dusk" : "☀ Day"; $("bMode").setAttribute("aria-label", d ? "Switch to dusk light" : "Switch to day light"); };
 $("bLoc").onclick = () => openModal("Location", `<div class="loc"><b>${PROJECT.name}</b><br>${PROJECT.address}<br><br>
   On the main 80' road, close to Celebration Mall, schools and the city's lifestyle destinations.<br><br>
   <a href="${PROJECT.maps}" target="_blank" rel="noopener">Open in Google Maps ↗</a><br><br>
@@ -247,9 +241,9 @@ function syncTargets() {
 let focusY = 15, focusing = false;
 function focusFloor() {
   focusY = state.floor == null ? (mobile ? 16 : 15) : floorY(state.floor) + FLOOR_H / 2;
-  const wantD = state.floor == null ? (mobile ? 120 : 80) : (mobile ? 105 : 75);
+  const wantD = state.floor == null ? (mobile ? 130 : 68) : (mobile ? 105 : 75);
   const az = Math.atan2(camera.position.x - controls.target.x, camera.position.z - controls.target.z);
-  const elev = mobile ? 20 : 14;
+  const elev = state.floor == null ? (mobile ? 8 : 4) : (mobile ? 20 : 14);
   controls.target.set(0, focusY, 0);
   camera.position.set(Math.sin(az) * wantD, focusY + elev, Math.cos(az) * wantD);
   controls.update(); focusing = false; invalidate();
@@ -294,7 +288,7 @@ new ResizeObserver(() => layout()).observe(panel);
 const tagP = new THREE.Vector3();
 function placeTag() {
   if (state.floor == null || state.wing != null) { if (!tag.hidden) tag.hidden = true; return; }
-  tagP.set(8.6, floorY(state.floor) + FLOOR_H / 2, 20.6).project(camera);
+  tagP.set(8.4, floorY(state.floor) + FLOOR_H / 2, 14.2).project(camera);
   const x = (tagP.x + 1) / 2 * W, y = (1 - tagP.y) / 2 * H;
   const vis = tagP.z < 1 && x > 0 && x < W - 120 && y > 60 && y < H - 20;
   const pr = panel.getBoundingClientRect(); const overPanel = x + 140 > pr.left && x < pr.right && y > pr.top && y < pr.bottom;
@@ -323,7 +317,7 @@ renderer.setAnimationLoop(() => {
   if (focusing || controls.autoRotate) invalidate();
   if (dirty <= 0) return;                     // nothing moved: skip the frame (battery, and slow GPUs)
   dirty--; renderer.render(scene, camera); placeTag();
-  if (first) { first = false; $("loading").classList.add("done"); (window as any).__ss = { ready: true }; }
+  if (first && modelReady) { first = false; $("loading").classList.add("done"); (window as any).__ss = { ready: true, info: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, pr: renderer.getPixelRatio() }) }; }
 });
 controls.addEventListener("start", () => { lastInteract = performance.now(); });
 
