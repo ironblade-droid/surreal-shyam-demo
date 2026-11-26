@@ -143,7 +143,15 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.NoToneMapping;
 const maxTex = renderer.capabilities.maxTextureSize;
 const desktop = innerWidth >= 900;
-let variant = (q.get("q") === "mobile" || maxTex < 2912) ? "mobile" : (q.get("q") === "hd" || (desktop && !slow)) ? "full" : "mobile";
+let variant = (function () {
+  const want = q.get("q");
+  if (want === "mobile" || maxTex < 2048) return "mobile";
+  if (want === "hd" || want === "4k" || want === "full") return "full";
+  if (want === "mid" || want === "3k") return "mid";
+  if (desktop && !slow && maxTex >= 4096) return "full";
+  if (!slow && maxTex >= 3072 && innerWidth >= 700) return "mid";
+  return "mobile";
+})();
 document.body.appendChild(renderer.domElement);
 const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(fov, innerWidth / innerHeight, 0.1, 1000);
 const geo = new THREE.SphereGeometry(100, 128, 80); geo.scale(-1, 1, 1);
@@ -280,8 +288,11 @@ async function showInner(id, first = false) {
   $("load")?.remove(); qlabel("preview");
   if (window.__pano) { window.__pano.ready = true; window.__pano.hd = false; }
   buildHotspots(r);
-  const src = variant === "mobile" && r.mobile ? r.mobile : r.full;
-  loader.loadAsync(src).then(tex => { if (my === token) { setMap(frontMat, prep(tex)); qlabel(variant === "mobile" ? "2K" : "HD"); if (window.__pano) window.__pano.hd = true; } else tex.dispose(); })
+  const src = variant === "mobile" && r.mobile ? r.mobile
+    : variant === "mid" && (r.mid || r.mobile) ? (r.mid || r.mobile)
+    : r.full;
+  const qname = variant === "mobile" ? "2K" : variant === "mid" ? "3K" : "4K";
+  loader.loadAsync(src).then(tex => { if (my === token) { setMap(frontMat, prep(tex)); qlabel(qname); if (window.__pano) window.__pano.hd = true; } else tex.dispose(); })
     .catch(() => qlabel("preview"));
 }
 function stepRoom(dir) {

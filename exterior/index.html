@@ -3,22 +3,26 @@
 <title>Surreal Shyam · Photoreal exterior</title><link rel="icon" href="../favicon.ico">
 <style>
 html,body{margin:0;height:100%;background:#0d0f12;color:#fff;font-family:Georgia,'Times New Roman',serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
-#wrap{position:fixed;inset:0;overflow:hidden}
+#wrap{position:fixed;inset:0;overflow:hidden;background:#0d0f12}
 #stage{position:absolute;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
 #stage.drag{cursor:grabbing}
 #stage img,#stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-#stage img{object-fit:cover;transition:opacity .25s}
+#stage img{object-fit:fill;transition:opacity .25s}
 #ov{pointer-events:none}
 .top{position:fixed;top:0;left:0;right:0;display:flex;align-items:flex-start;justify-content:space-between;padding:14px 16px;background:linear-gradient(rgba(0,0,0,.55),transparent);z-index:5;pointer-events:none}
 .top>*{pointer-events:auto}
 .brand{font-size:19px;line-height:1.15}.brand small{display:block;font:600 10px/1.6 system-ui,sans-serif;letter-spacing:2px;opacity:.8}
 .home{background:#c9a24b;color:#111;padding:9px 14px;border-radius:22px;text-decoration:none;font:600 13px system-ui,sans-serif;white-space:nowrap}
 .seg{position:fixed;top:64px;left:50%;transform:translateX(-50%);display:flex;background:rgba(0,0,0,.5);border-radius:22px;padding:3px;z-index:5;backdrop-filter:blur(6px)}
+.seg[hidden]{display:none}
 .seg button{border:0;background:none;color:#fff;font:600 13px system-ui,sans-serif;padding:7px 16px;border-radius:18px;cursor:pointer}
 .seg button.on{background:#fff;color:#111}
 .arrow{position:fixed;top:50%;transform:translateY(-50%);width:50px;height:50px;border-radius:50%;border:0;background:rgba(0,0,0,.45);color:#fff;font-size:30px;line-height:1;cursor:pointer;z-index:5;backdrop-filter:blur(4px)}
 #prev{left:12px}#next{right:12px}
 .bar{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(14px + env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(0,0,0,.6));text-align:center;font:12px/1.5 system-ui,sans-serif;z-index:4;pointer-events:none}
+.bar .tools{pointer-events:auto;display:flex;justify-content:center;margin-bottom:8px}
+#bFill{border:0;background:rgba(0,0,0,.5);color:#fff;font:600 12px system-ui,sans-serif;padding:7px 14px;border-radius:18px;cursor:pointer;backdrop-filter:blur(6px);letter-spacing:.06em;text-transform:uppercase}
+#bFill.on{background:#c9a24b;color:#111}
 .dots{display:flex;justify-content:center;gap:6px;margin-bottom:6px}.dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.35)}.dots i.on{background:#c9a24b}
 #card{position:fixed;z-index:6;left:50%;bottom:calc(64px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(360px,calc(100% - 28px));background:rgba(18,20,24,.92);border:1px solid rgba(201,162,75,.5);border-radius:14px;padding:14px 16px;box-shadow:0 10px 30px rgba(0,0,0,.45);backdrop-filter:blur(8px)}
 #card[hidden]{display:none}
@@ -36,9 +40,9 @@ html,body{margin:0;height:100%;background:#0d0f12;color:#fff;font-family:Georgia
 <div id="load">Loading Surreal Shyam…</div>
 <div id="wrap"><div id="stage"><img id="img" alt="Surreal Shyam, photoreal exterior render"><canvas id="ov"></canvas></div></div>
 <div class="top"><div class="brand">Surreal Shyam<small>PREMIUM 3 BHK · UDAIPUR</small></div><a class="home" href="../">Explore floors in 3D</a></div>
-<div class="seg" role="group" aria-label="Lighting"><button id="bDusk" class="on" type="button">Dusk</button><button id="bDay" type="button">Day</button></div>
+<div class="seg" id="seg" hidden role="group" aria-label="Lighting"><button id="bDusk" class="on" type="button">Dusk</button><button id="bDay" type="button">Day</button></div>
 <button class="arrow" id="prev" type="button" aria-label="Rotate left">‹</button><button class="arrow" id="next" type="button" aria-label="Rotate right">›</button>
-<div class="bar"><div class="dots" id="dots"></div><span id="cap"></span></div>
+<div class="bar"><div class="tools"><button id="bFill" type="button" aria-pressed="false">Fill screen</button></div><div class="dots" id="dots"></div><span id="cap"></span></div>
 <div id="tip" hidden></div>
 <div id="card" hidden role="dialog" aria-live="polite"></div>
 <script>
@@ -50,22 +54,38 @@ let IDMAP={}, mode="dusk", k=-1;            // k=-1: opening hero shot (brochure
 const $=id=>document.getElementById(id), stage=$("stage"), img=$("img"), ov=$("ov"), card=$("card"), tip=$("tip");
 const masks={}; let mask=null, sel=null, hov=null;
 const frameName=()=>k<0?"hero":String(k).padStart(2,"0");
-function size(){                            // 16:9 stage: contain on landscape, height-led crop on portrait (building is centred)
-  const vw=document.documentElement.clientWidth, vh=document.documentElement.clientHeight; let w,h;
-  if(vw/vh>=1){w=Math.min(vw,vh*16/9);h=w*9/16}else{h=Math.min(vh*0.66,vw*1.6);w=h*16/9}
+// Fit (contain, default on portrait) vs Fill (cover). Pinch zooms between them.
+let cover=false, scale=1, pinch=null;
+function box(vw,vh,mode){ // mode 'contain' | 'cover'
+  const r=16/9;
+  if(mode==="contain"){const w=Math.min(vw,vh*r),h=w/r;return {w,h,l:(vw-w)/2,t:(vh-h)/2}}
+  const w=Math.max(vw,vh*r),h=w/r;return {w,h,l:(vw-w)/2,t:(vh-h)/2};
+}
+function size(){
+  const vw=document.documentElement.clientWidth, vh=document.documentElement.clientHeight;
+  const a=box(vw,vh,"contain"), b=box(vw,vh,"cover");
+  const coverS=b.w/a.w, maxS=coverS*1.35;
+  if(cover) scale=Math.max(coverS, scale);
+  scale=Math.max(1, Math.min(maxS, scale));
+  const w=a.w*scale, h=a.h*scale;
   Object.assign(stage.style,{width:w+"px",height:h+"px",left:(vw-w)/2+"px",top:Math.max(0,(vh-h)/2)+"px"});
+  const filled=scale>=coverS-0.02;
+  $("bFill").textContent=filled?"Fit image":"Fill screen";
+  $("bFill").classList.toggle("on", filled);
+  $("bFill").setAttribute("aria-pressed", filled?"true":"false");
 }
 const res=()=>stage.offsetWidth<1100&&devicePixelRatio<2.5?"1024":"1920";
 function src(m,f){return `img/${m}/${f}-${res()}.webp`}
 function show(){
-  const f=frameName(), m=(k<0&&mode==="day")?"dusk":mode;
+  const f=frameName();
+  const m=(k<0&&mode==="day")?"dusk":mode;
   img.src=src(m,f); img.alt=`Surreal Shyam exterior, ${k<0?"street corner view":"angle "+(k+1)+" of 12"}, ${m}`;
-  $("cap").textContent=(k<0?"Street-corner view":"Angle "+(k+1)+" / "+N)+" · drag or swipe to rotate · tap a floor to see the flat";
+  $("cap").textContent=(k<0?"Street-corner view":"Angle "+(k+1)+" / "+N)+" · drag or swipe to rotate · pinch or Fill to zoom · tap a floor";
   [...$("dots").children].forEach((d,i)=>d.classList.toggle("on",i===k));
   $("bDusk").classList.toggle("on",mode==="dusk"); $("bDay").classList.toggle("on",mode==="day");
+  $("seg").hidden=k<0;          // hero has no Day render; hide the toggle there
   loadMask(f); sel=null; hov=null; card.hidden=true; tip.hidden=true; draw();
-  // preload neighbours
-  [k-1,k+1].forEach(j=>{const jj=(j+N)%N;new Image().src=src(mode,String(jj).padStart(2,"0"))});
+  if(k>=0) [k-1,k+1].forEach(j=>{const jj=(j+N)%N;new Image().src=src(mode,String(jj).padStart(2,"0"))});
 }
 function loadMask(f){
   if(masks[f]){mask=masks[f];draw();return}
@@ -109,26 +129,45 @@ function openCard(h){
 }
 const label=h=>{const t=info(h);return !t?"":!t.floor?"Ground floor · retail & lobby":`Floor ${t.floor} · ${WINGS[t.wing].name} · Flat ${t.unit}`};
 function step(dir){k=k<0?(dir>0?1:N-1):(k+dir+N)%N;show()}
-// pointer: drag/swipe rotates (one step per ~70px), a short tap selects a flat
-let down=null,moved=0;
-stage.addEventListener("pointerdown",e=>{down={x:e.clientX,y:e.clientY,acc:0};moved=0;stage.setPointerCapture(e.pointerId)});
+let down=null,moved=0,ptrs=new Map();
+function pdist(){const[a,b]=[...ptrs.values()];return Math.hypot(a.x-b.x,a.y-b.y)}
+stage.addEventListener("pointerdown",e=>{ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(ptrs.size===2){const a=box(document.documentElement.clientWidth,document.documentElement.clientHeight,"contain");pinch={d:pdist(),s:scale,cover};down=null;return}
+  pinch=null;down={x:e.clientX,y:e.clientY,acc:0};moved=0;try{stage.setPointerCapture(e.pointerId)}catch{}});
 stage.addEventListener("pointermove",e=>{
+  if(ptrs.has(e.pointerId)){ptrs.get(e.pointerId).x=e.clientX;ptrs.get(e.pointerId).y=e.clientY}
+  if(pinch&&ptrs.size>=2){const a=box(document.documentElement.clientWidth,document.documentElement.clientHeight,"contain");
+    const coverS=box(document.documentElement.clientWidth,document.documentElement.clientHeight,"cover").w/a.w;
+    scale=Math.max(1,Math.min(coverS*1.35, pinch.s*pdist()/Math.max(1,pinch.d))); cover=scale>=coverS-0.02; size(); return}
   if(down){const dx=e.clientX-down.x;moved=Math.max(moved,Math.abs(dx),Math.abs(e.clientY-down.y));
     if(moved>8)stage.classList.add("drag");
     if(Math.abs(dx-down.acc)>70){const s=dx-down.acc<0?1:-1;down.acc+=s<0?70:-70;step(s)}return}
   if(e.pointerType!=="mouse")return; const h=keyAt(e.clientX,e.clientY);
   if(h!==hov){hov=h;draw()} if(h){tip.hidden=false;tip.textContent=label(h);tip.style.left=e.clientX+14+"px";tip.style.top=e.clientY+14+"px"}else tip.hidden=true;
 });
-stage.addEventListener("pointerleave",()=>{if(!down){hov=null;tip.hidden=true;draw()}});
-stage.addEventListener("pointerup",e=>{stage.classList.remove("drag");const was=down;down=null;
-  if(was&&moved<8){const h=keyAt(e.clientX,e.clientY);sel=h;hov=null;tip.hidden=true;draw();if(h)openCard(h);else card.hidden=true}});
+const up=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch=null;if(!ptrs.size){stage.classList.remove("drag");const was=down;down=null;
+  if(was&&moved<8){const h=keyAt(e.clientX,e.clientY);sel=h;hov=null;tip.hidden=true;draw();if(h)openCard(h);else card.hidden=true}}};
+stage.addEventListener("pointerup",up);stage.addEventListener("pointercancel",up);
+stage.addEventListener("pointerleave",()=>{if(!down&&!pinch){hov=null;tip.hidden=true;draw()}});
+stage.addEventListener("wheel",e=>{e.preventDefault();
+  const a=box(document.documentElement.clientWidth,document.documentElement.clientHeight,"contain");
+  const coverS=box(document.documentElement.clientWidth,document.documentElement.clientHeight,"cover").w/a.w;
+  scale=Math.max(1,Math.min(coverS*1.35, scale*(e.deltaY<0?1.08:1/1.08))); cover=scale>=coverS-0.02; size();
+},{passive:false});
+$("bFill").onclick=()=>{
+  const vw=document.documentElement.clientWidth, vh=document.documentElement.clientHeight;
+  const coverS=box(vw,vh,"cover").w/box(vw,vh,"contain").w;
+  if(cover||scale>1.02){cover=false;scale=1}else{cover=true;scale=coverS}
+  size();
+};
 $("prev").onclick=()=>step(-1);$("next").onclick=()=>step(1);
-$("bDusk").onclick=()=>{mode="dusk";show()};$("bDay").onclick=()=>{mode="day";if(k<0)k=0;show()};
+$("bDusk").onclick=()=>{mode="dusk";show()};
+$("bDay").onclick=()=>{mode="day";show()};   // hidden on the hero, so this never jumps off the corner view
 addEventListener("keydown",e=>{if(e.key==="ArrowLeft")step(-1);if(e.key==="ArrowRight")step(1);if(e.key==="Escape"){sel=null;card.hidden=true;draw()}});
 addEventListener("resize",()=>{size()});
 img.addEventListener("load",()=>{$("load").style.display="none"});
 $("dots").innerHTML=Array.from({length:N},()=>"<i></i>").join("");
-window.__mask=()=>mask;window.__idmap=()=>IDMAP;
+window.__mask=()=>mask;window.__idmap=()=>IDMAP;window.__ext={get k(){return k},get mode(){return mode},get scale(){return scale},get cover(){return cover}};
 size();
 fetch("img/id_map.json").then(r=>r.json()).then(j=>{IDMAP=j.colors;show()});
 </script></body></html>
