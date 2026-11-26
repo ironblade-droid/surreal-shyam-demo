@@ -139,7 +139,7 @@
       "fov": 95,
       "preview": "rooms/toilet-1024x512.webp",
       "mobile": "rooms/toilet-2048x1024.webp",
-      "full": "rooms/toilet-2912x1456.webp",
+      "full": "rooms/toilet-4096x2048.webp",
       "hotspots": [
         {
           "to": "bedroom3",
@@ -148,7 +148,8 @@
           "label": "Bedroom 3"
         }
       ],
-      "short": "Toilet"
+      "short": "Toilet",
+      "mid": "rooms/toilet-3072x1536.webp"
     },
     {
       "id": "balcony",
