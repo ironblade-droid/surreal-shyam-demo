@@ -13,7 +13,7 @@ const mobile = coarse || Math.min(innerWidth, innerHeight) < 600;
 const lite = reduce || /[?&]lite/.test(location.search) || !(() => { try { return !!document.createElement("canvas").getContext("webgl2"); } catch { return false; } })();
 
 // ---------------------------------------------------------------- smooth scroll
-const lenis = reduce ? null : new Lenis({ lerp: 0.085, smoothWheel: true });
+const lenis = reduce ? null : new Lenis({ lerp: 0.07, smoothWheel: true, wheelMultiplier: 0.8, touchMultiplier: 1.1 });
 if (lenis) { lenis.on("scroll", ScrollTrigger.update); gsap.ticker.add(t => lenis.raf(t * 1000)); gsap.ticker.lagSmoothing(0); }
 document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach(a => a.addEventListener("click", e => {
   const t = document.querySelector(a.getAttribute("href")!); if (!t) return; e.preventDefault();
@@ -44,8 +44,11 @@ function story(p: number) {
   intro.style.visibility = ip >= 1 ? "hidden" : "visible";
   for (const c of chaps) {
     const a = +c.dataset.in!, b = +c.dataset.out!;
-    const o = Math.min(sm(a, a + 0.025, p), 1 - sm(b - 0.025, b, p));
-    c.style.opacity = String(o); c.style.visibility = o > 0.001 ? "visible" : "hidden"; c.style.translate = `0 ${(1 - o) * 18}px`;
+    const o = Math.min(sm(a, a + 0.03, p), 1 - sm(b - 0.03, b, p));
+    c.style.visibility = o > 0.001 ? "visible" : "hidden"; c.style.opacity = o > 0.001 ? "1" : "0";
+    [...c.children].forEach((k, i) => { const e = k as HTMLElement; const d = i * 0.008;
+      const oi = Math.min(sm(a + d, a + d + 0.03, p), 1 - sm(b - 0.03 - (2 - i) * 0.004, b - (2 - i) * 0.004, p));
+      e.style.opacity = String(oi); e.style.transform = `translateY(${(1 - oi) * (p < (a + b) / 2 ? 22 : -14)}px)`; });
   }
   rail.style.height = (p * 100) + "%";
   // floor counter (02 · Rising : 0.24 -> 0.50)
@@ -55,7 +58,8 @@ function story(p: number) {
   counterSub.textContent = f === 0 ? "Retail and entrance level" : f === 7 ? "Seven floors, 28 homes" : `Four 3 BHK homes · ${f * 4} so far`;
   if (scn) scn.update(p);
 }
-ScrollTrigger.create({ trigger: ".story", start: "top top", end: "bottom bottom", onUpdate: s => story(s.progress) });
+const prog = { p: 0 };
+gsap.to(prog, { p: 1, ease: "none", scrollTrigger: { trigger: ".story", start: "top top", end: "bottom bottom", scrub: reduce ? true : 1.3 }, onUpdate: () => story(prog.p) });
 const top = $(".top");
 const solid = () => top.classList.toggle("solid", ($(".content").getBoundingClientRect().top) < 80);
 addEventListener("scroll", solid, { passive: true }); solid();
@@ -117,17 +121,21 @@ function start3D(): Scn {
   // camera keyframes: p, azimuth (rad), height-to-fit (m), elevation (deg), target y
   const K: [number, number, number, number, number][] = [
     [0.00, -0.25, 120, 38, 2], [0.10, -0.45, 90, 30, 2], [0.22, -0.62, 62, 22, 6],
-    [0.36, -0.40, 52, 14, 11], [0.52, -0.15, 46, 9, 14], [0.66, -0.62, 44, 7, 14.5],
-    [0.80, -1.10, 44, 6, 14.5], [1.00, -1.80, 46, 8, 14.5]];
+    [0.36, -0.40, 52, 14, 11], [0.52, -0.15, 46, 9, 14], [0.66, -0.62, 48, 7, 15],
+    [0.80, -1.10, 52, 6, 15.5], [1.00, -1.80, 54, 8, 15.5]];
   const tgt = new THREE.Vector3(); let W = 1, H = 1;
   function resize() { W = innerWidth; H = innerHeight; renderer.setSize(W, H, false); camera.aspect = W / H; camera.updateProjectionMatrix(); dirty = true; }
   addEventListener("resize", resize); resize();
-  let mx = 0, my = 0; addEventListener("pointermove", e => { if (coarse) return; mx = e.clientX / W - 0.5; my = e.clientY / H - 0.5; dirty = true; }, { passive: true });
+  let mx = 0, my = 0, tx = 0, ty0 = 0;
+  addEventListener("pointermove", e => { if (coarse) return; tx = e.clientX / W - 0.5; ty0 = e.clientY / H - 0.5; }, { passive: true });
+  addEventListener("deviceorientation", e => { if (e.gamma == null || e.beta == null) return; tx = Math.max(-1, Math.min(1, e.gamma / 30)) * 0.25; ty0 = Math.max(-1, Math.min(1, (e.beta - 45) / 30)) * 0.15; }, { passive: true });
   let lastShadow = -1;
   function setP(p: number) {
     // build state
     const rise = sm(0.25, 0.50, p) * 8;                   // 0..8 floors
-    const fl = Math.floor(rise), fr = rise - fl, step = fl + sm(0.15, 0.85, fr);
+    const fl = Math.floor(rise), fr = rise - fl;
+    const q = Math.min(1, Math.max(0, (fr - 0.1) / 0.75)), c1 = 1.25, settle = 1 + (c1 + 1) * Math.pow(q - 1, 3) + c1 * Math.pow(q - 1, 2);
+    const step = fl + Math.min(1.03, settle);
     const cutH = (n: number) => n <= 0 ? 0.02 : n <= 1 ? 5.2 * n : 5.2 + (n - 1) * 3.2 + (n >= 8 ? 6 : 0);
     B.cut = p < 0.25 ? 0.02 : rise >= 8 ? 40 : cutH(step);
     B.skin = p < 0.53 ? -1 : 0.53 <= p && p < 0.63 ? sm(0.53, 0.63, p) * 33 : 40;
@@ -140,24 +148,28 @@ function start3D(): Scn {
   }
   function frame(p: number, t: number) {
     let i = 0; while (i < K.length - 2 && p > K[i + 1][0]) i++;
-    const a = K[i], b = K[i + 1], u = sm(a[0], b[0], p);
-    const L = (j: number) => a[j] + (b[j] - a[j]) * u;
-    const drift = p > 0.7 ? Math.sin(t * 0.00012) * 0.06 : 0;
-    const az = L(1) + mx * 0.12 + drift, fit = L(2), el = THREE.MathUtils.degToRad(L(3) - my * 4), ty = L(4);
+    const a = K[i], b = K[i + 1], a0 = K[Math.max(0, i - 1)], b1 = K[Math.min(K.length - 1, i + 2)];
+    const u = Math.min(1, Math.max(0, (p - a[0]) / (b[0] - a[0])));
+    const L = (j: number) => { const p0 = a0[j], p1 = a[j], p2 = b[j], p3 = b1[j], u2 = u * u, u3 = u2 * u;
+      return 0.5 * (2 * p1 + (-p0 + p2) * u + (2 * p0 - 5 * p1 + 4 * p2 - p3) * u2 + (-p0 + 3 * p1 - 3 * p2 + p3) * u3); };
+    const drift = Math.sin(t * 0.00009) * 0.05 * sm(0.66, 0.76, p);
+    const az = L(1) + mx * (coarse ? 0.06 : 0.1) + drift, fit = L(2), el = THREE.MathUtils.degToRad(L(3) - my * (coarse ? 2 : 3.5)), ty = L(4);
     const vf = THREE.MathUtils.degToRad(camera.fov) / 2, hf = Math.atan(Math.tan(vf) * camera.aspect);
-    const d = Math.max((fit / 2) / Math.tan(vf), (fit * 0.62) / Math.tan(hf));
+    const portrait = W <= 820 && H > W;
+    const d = Math.max((fit / 2) / Math.tan(vf), (fit * (portrait ? 0.68 : 0.62)) / Math.tan(hf));
     tgt.set(0, ty, 0);
     camera.position.set(Math.sin(az) * d * Math.cos(el), ty + Math.sin(el) * d, Math.cos(az) * d * Math.cos(el));
     camera.lookAt(tgt);
     // composition: building to the right of the text on desktop, above the card on phones
-    if (W > 820) camera.setViewOffset(W, H, -W * 0.14, 0, W, H); else camera.setViewOffset(W, H, 0, H * 0.12, W, H);
+    if (W > 820) camera.setViewOffset(W, H, -W * 0.14, 0, W, H); else camera.setViewOffset(W, H, 0, H * (0.12 - 0.06 * sm(0.62, 0.74, p)), W, H);
   }
   let visible = true, lastP = -1, frames = 0, acc = 0, lastT = performance.now();
   new IntersectionObserver(es => { visible = es[0].isIntersecting; }).observe($(".story"));
   function loop(t: number) {
     requestAnimationFrame(loop);
     if (!visible || document.hidden) return;
-    const moving = P > 0.7 && P < 1;                      // slow orbit drift on the finished tower
+    mx += (tx - mx) * 0.05; my += (ty0 - my) * 0.05;
+    const moving = (P > 0.66 && P < 1) || Math.abs(tx - mx) > 0.001 || Math.abs(ty0 - my) > 0.001;
     if (P !== lastP) { lastP = P; dirty = true; }
     if (!dirty && !moving) { lastT = t; return; }
     dirty = false;
