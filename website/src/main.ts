@@ -20,16 +20,8 @@ document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach(a => a.addE
   lenis ? lenis.scrollTo(t as HTMLElement, { duration: 1.6 }) : (t as HTMLElement).scrollIntoView();
 }));
 
-// ---------------------------------------------------------------- intro logo letters
-const logo = $("#logo"); logo.innerHTML = [...logo.textContent!].map(c => `<span>${c === " " ? "&nbsp;" : c}</span>`).join("");
-const letters = [...logo.querySelectorAll("span")] as HTMLElement[];
-const seeds = letters.map((_, i) => [Math.sin(i * 12.9) , Math.cos(i * 7.3), Math.sin(i * 3.1)]);
-const react = $("#react"); react.innerHTML = [...react.textContent!].map(c => `<span>${c === " " ? "&nbsp;" : c}</span>`).join("");
-const rLetters = [...react.querySelectorAll("span")] as HTMLElement[];
-addEventListener("pointermove", e => {
-  for (const s of rLetters) { const r = s.getBoundingClientRect(); const dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
-    const k = Math.exp(-(dx * dx + dy * dy) / 18000); s.style.transform = `translateY(${-k * 14}px)`; s.style.color = k > 0.35 ? "#e8c58f" : ""; }
-}, { passive: true });
+// ---------------------------------------------------------------- intro (fade as a block — no letter shatter)
+const heroStill = $("#heroStill");
 
 // ---------------------------------------------------------------- chapters + scroll progress
 const chaps = [...document.querySelectorAll(".chap")] as HTMLElement[];
@@ -39,9 +31,10 @@ let P = 0; let scn: { update(p: number): void } | null = null;
 function story(p: number) {
   P = p;
   const ip = sm(0, 0.085, p);
-  letters.forEach((l, i) => { const s = seeds[i]; l.style.transform = `translate(${s[0] * ip * 160}px, ${s[1] * ip * 90 - ip * 40}px) rotate(${s[2] * ip * 18}deg)`; l.style.opacity = String(1 - ip); l.style.filter = ip > 0.01 ? `blur(${ip * 6}px)` : ""; });
-  (intro.querySelectorAll(".eyebrow,.lede,.hint") as NodeListOf<HTMLElement>).forEach(e => e.style.opacity = String(1 - sm(0, 0.05, p)));
+  intro.style.opacity = String(1 - ip);
   intro.style.visibility = ip >= 1 ? "hidden" : "visible";
+  intro.style.pointerEvents = ip > 0.4 ? "none" : "auto";
+  if (heroStill) { heroStill.style.opacity = String(1 - sm(0.02, 0.13, p)); heroStill.classList.toggle("off", p > 0.13); }
   for (const c of chaps) {
     const a = +c.dataset.in!, b = +c.dataset.out!;
     const o = Math.min(sm(a, a + 0.03, p), 1 - sm(b - 0.03, b, p));
@@ -69,21 +62,74 @@ document.querySelectorAll(".sec > *").forEach(el => { el.classList.add("reveal")
 const tabs = $("#tabs"), wingEl = $("#wing");
 function showWing(i: number) {
   const w = WINGS[i];
+  const src = "img/" + w.plan.replace(/^img\//, "");
   tabs.querySelectorAll("button").forEach((b, j) => b.setAttribute("aria-selected", String(j === i)));
-  wingEl.innerHTML = `<img src="../${w.plan}" alt="${w.name} floor plan" loading="lazy">
+  wingEl.innerHTML = `<div class="plan-wrap"><img src="${src}" alt="${w.name} floor plan" loading="lazy"><button type="button" class="btn" data-plan="${src}">Enlarge plan</button></div>
     <div><h3>${w.name}</h3><p class="faces">${w.faces}</p>
     <div class="areas"><div><b>${w.sbu.toLocaleString("en-IN")}</b><span>Super built-up sq ft</span></div><div><b>${w.builtUp.toLocaleString("en-IN")}</b><span>Built-up sq ft</span></div><div><b>${sqft(w.carpet).toLocaleString("en-IN")}</b><span>Carpet sq ft</span></div></div>
     <ul class="rooms">${w.rooms.filter(r => !/Vestibule|Store|Utility/.test(r[1])).map(r => `<li>${r[1]} <span>${r[2]}</span></li>`).join("")}</ul></div>`;
+  wingEl.querySelector("button")?.addEventListener("click", () => openPlan(src, w.name));
+  wingEl.querySelector("img")?.addEventListener("click", () => openPlan(src, w.name));
 }
 WINGS.forEach((w, i) => { const b = document.createElement("button"); b.type = "button"; b.role = "tab"; b.textContent = w.name; b.onclick = () => showWing(i); tabs.appendChild(b); });
 showWing(0);
 
-// ---------------------------------------------------------------- enquiry -> WhatsApp
+// ---------------------------------------------------------------- enquiry: validate, then WhatsApp or mailto
+const PHONE = /^(?:\+91[\s-]?|0)?[6-9]\d{9}$/;
+const formErr = $("#formErr");
+let formVia = "wa";
+$("#form").querySelectorAll<HTMLButtonElement>("button[data-via]").forEach(b => b.addEventListener("click", () => { formVia = b.dataset.via || "wa"; }));
 $("#form").addEventListener("submit", e => {
-  e.preventDefault(); const d = new FormData(e.target as HTMLFormElement);
-  const txt = `Hello, I am interested in Surreal Shyam, Udaipur.\nName: ${d.get("name")}\nPhone: ${d.get("phone")}\nPreferred: ${d.get("wing")}\n${d.get("msg") || ""}`;
-  window.open("https://wa.me/919610972223?text=" + encodeURIComponent(txt), "_blank", "noopener");
+  e.preventDefault();
+  const form = e.target as HTMLFormElement;
+  const d = new FormData(form);
+  const name = String(d.get("name") || "").trim();
+  const phone = String(d.get("phone") || "").trim();
+  const bhk = String(d.get("bhk") || "");
+  const visit = String(d.get("visit") || "");
+  form.querySelectorAll("label").forEach(l => l.classList.remove("invalid"));
+  const bad: string[] = [];
+  if (name.length < 2) { bad.push("Please enter your name."); form.querySelector('input[name="name"]')?.parentElement?.classList.add("invalid"); }
+  if (!PHONE.test(phone)) { bad.push("Please enter a valid 10-digit Indian mobile number."); form.querySelector('input[name="phone"]')?.parentElement?.classList.add("invalid"); }
+  if (!visit) { bad.push("Please choose a preferred visit time."); form.querySelector('select[name="visit"]')?.parentElement?.classList.add("invalid"); }
+  if (bad.length) { formErr.hidden = false; formErr.textContent = bad.join(" "); return; }
+  formErr.hidden = true;
+  const txt = `Hello, I would like to book a site visit at Surreal Shyam, Udaipur.\nName: ${name}\nPhone: ${phone}\nConfiguration: ${bhk}\nPreferred visit time: ${visit}`;
+  if (formVia === "mail") {
+    location.href = "mailto:surrealhomesllp@gmail.com?subject=" + encodeURIComponent("Site visit: Surreal Shyam") + "&body=" + encodeURIComponent(txt);
+  } else {
+    window.open("https://wa.me/919610972223?text=" + encodeURIComponent(txt), "_blank", "noopener");
+  }
 });
+
+// ---------------------------------------------------------------- floor-plan lightbox (wheel zoom, drag, pinch)
+const box = $("#planBox"), zoom = $("#planZoom") as HTMLImageElement;
+let z = 1, px = 0, py = 0;
+const applyZ = () => { zoom.style.transform = `translate(${px}px, ${py}px) scale(${z})`; };
+function openPlan(src: string, name: string) {
+  zoom.src = src; zoom.alt = name + " floor plan, enlarged";
+  z = 1; px = 0; py = 0; applyZ();
+  box.hidden = false; document.body.style.overflow = "hidden";
+}
+function closePlan() { box.hidden = true; document.body.style.overflow = ""; }
+$("#planClose").addEventListener("click", closePlan);
+box.addEventListener("click", e => { if (e.target === box) closePlan(); });
+addEventListener("keydown", e => { if (e.key === "Escape" && !box.hidden) closePlan(); });
+box.addEventListener("wheel", e => {
+  if (box.hidden) return; e.preventDefault();
+  z = Math.min(5, Math.max(1, z * (e.deltaY > 0 ? 0.9 : 1.1))); if (z === 1) { px = 0; py = 0; } applyZ();
+}, { passive: false });
+let drag = false, sx = 0, sy = 0;
+zoom.addEventListener("pointerdown", e => { drag = true; sx = e.clientX - px; sy = e.clientY - py; zoom.setPointerCapture(e.pointerId); });
+zoom.addEventListener("pointermove", e => { if (!drag) return; px = e.clientX - sx; py = e.clientY - sy; applyZ(); });
+zoom.addEventListener("pointerup", () => { drag = false; });
+let pinch = 0;
+box.addEventListener("touchstart", e => { if (e.touches.length === 2) pinch = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); }, { passive: true });
+box.addEventListener("touchmove", e => {
+  if (e.touches.length !== 2 || box.hidden) return; e.preventDefault();
+  const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+  if (pinch) { z = Math.min(5, Math.max(1, z * d / pinch)); applyZ(); } pinch = d;
+}, { passive: false });
 
 // ---------------------------------------------------------------- 3D
 interface Scn { update(p: number): void; }
